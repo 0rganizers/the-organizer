@@ -1,25 +1,33 @@
-import collections
+import dataclasses
 import json
 import logging
 import pathlib
 
-class ConfigItem(collections.UserDict):
-    def __init__(self, obj):
-        self.data = obj
-        for k, v in obj.items():
-            self.__dict__[k] = self[k] = self.new(v)
+@dataclasses.dataclass
+class BotConfig:
+    token: str
+    client_id: int
+    guild: int
 
-    @classmethod
-    def new(cls, x):
-        if isinstance(x, dict):
-            return ConfigItem(x)
-        elif isinstance(x, list):
-            return [ConfigItem.new(y) for y in x]
-        return x
+@dataclasses.dataclass
+class ManagementConfig:
+    categories: list[str]
 
 def load(filename: pathlib.Path):
+    global is_loaded, bot, mgmt
     with filename.open("r") as configfile:
-        for k, v in json.load(configfile).items():
-            globals()[k] = ConfigItem.new(v)
+        conf = json.load(configfile)
+        bot = BotConfig(
+                conf['bot']['token'],
+                conf['bot']['client_id'],
+                conf['bot']['guild'],
+                )
+        mgmt = ManagementConfig(
+                conf['mgmt']['categories'],
+                )
+    is_loaded = True
 
 logging.basicConfig(level=logging.INFO)
+is_loaded: bool = False
+bot: BotConfig
+mgmt: ManagementConfig

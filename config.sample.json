@@ -1,0 +1,13 @@
+{
+    "bot": {
+        "token": "<snip>",
+        "client_id": 1234567890,
+        "guild": 1234567890
+    },
+    "mgmt": {
+        "categories": [
+            "pwn",
+            "crypto"
+        ]
+    }
+}

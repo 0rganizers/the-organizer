@@ -1,0 +1,78 @@
+from . import config
+
+import asyncio
+import logging
+import typing
+
+import discord                                                                  # type: ignore
+import discord_slash                                                            # type: ignore
+from discord_slash.utils.manage_commands import create_option, create_choice    # type: ignore
+from discord_slash.model import SlashCommandOptionType                          # type: ignore
+
+def setup():
+    assert config.is_loaded
+
+    bot = discord.Client(intents=discord.Intents.default())
+    slash = discord_slash.SlashCommand(bot, sync_commands=True)
+
+    @bot.event
+    async def on_ready():
+        guild = bot.get_guild(config.bot.guild)
+
+        logging.info(discord.utils.oauth_url(
+            config.bot.client_id,
+            guild=guild,
+            scopes=["bot", "applications.commands"]
+            ))
+
+    @slash.slash(name="ping", description="Just a test, sleeps for 5 seconds then replies with 'pong'", guild_ids=[config.bot.guild])
+    async def ping(ctx: discord_slash.SlashContext):
+        await ctx.defer()
+        await asyncio.sleep(5)
+        await ctx.send("Pong!")
+
+    @slash.slash(name="chal",
+                 description="Create a new challenge channel",
+                 guild_ids=[config.bot.guild],
+                 options=[
+                        create_option(name="category",
+                                      description="Which category does the channel belong to",
+                                      option_type=SlashCommandOptionType.STRING,
+                                      required=True,
+                                      choices=dict(zip(*[config.mgmt.categories]*2))
+                                      ),
+                        create_option(name="challenge",
+                                      description="Challenge name",
+                                      option_type=SlashCommandOptionType.STRING,
+                                      required=True)
+                     ])
+    async def create_challenge_channel(ctx: discord_slash.SlashContext, category: str, challenge: str):
+        cat = discord.utils.find(lambda c: c.name == category, ctx.guild.categories)
+        created = await ctx.guild.create_text_channel(challenge, category=cat)
+        await ctx.send(f"The channel for <#{created.id}> ({category}) was created")
+
+    @slash.slash(name="solved",
+                 description="The challenge was solved",
+                 guild_ids=[config.bot.guild],
+                 options=[
+                     create_option(name="flag",
+                                   description="The flag that was obtained",
+                                   option_type=SlashCommandOptionType.STRING,
+                                   required=False)
+                     ]
+                 )
+    async def mark_solved(ctx: discord_slash.SlashContext, flag: typing.Optional[str] = None):
+        await ctx.defer()
+        if not ctx.channel.name.startswith("✓"):
+            await ctx.channel.edit(name=f"✓-{ctx.channel.name}", position=999)
+        if flag is not None:
+            msg = await ctx.send(f"The flag: `{flag}`")
+            await msg.pin()
+        await ctx.send("done", hidden=True)
+
+    return bot
+
+def run(loop: asyncio.AbstractEventLoop):
+    bot = setup()
+    bot.loop = loop
+    loop.create_task(bot.start(config.bot.token))
