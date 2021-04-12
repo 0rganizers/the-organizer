@@ -1,0 +1,13 @@
+image: archlinux
+packages:
+  - python-poetry
+sources:
+  - git@git.sr.ht:~robin_jadoul/organizers-bot
+tasks:
+  - install_deps: |
+      cd organizers-bot
+      poetry install
+
+  - typecheck: |
+      cd organizers-bot
+      poetry run mypy organizers_bot

@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "organizers-bot"
+version = "0.1.0"
+description = "The management bot for the Organizers CTF discord"
+authors = ["Robin Jadoul <~robin_jadoul/inbox@lists.sr.ht>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://git.sr.ht/~robin_jadoul/organizers-bot"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+"discord.py" = "^1.7.1"
+discord-py-slash-command = "^1.1.1"
+
+[tool.poetry.dev-dependencies]
+mypy = "^0.812"
+
+[tool.poetry.scripts]
+organizers-bot = 'organizers_bot.main:main'
+
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
