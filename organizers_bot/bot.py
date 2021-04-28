@@ -70,6 +70,28 @@ def setup():
             await msg.pin()
         await ctx.send("done", hidden=True)
 
+    @slash.slash(name="archive",
+                 description="Move all current challenges to a new archive",
+                 guild_ids=[config.bot.guild],
+                 options=[
+                     create_option(name="name",
+                                   description="The name for the archive",
+                                   option_type=SlashCommandOptionType.STRING,
+                                   required=True)
+                     ]
+                 )
+    async def archive(ctx: discord_slash.SlashContext, name: str):
+        if ctx.guild is None:
+            return
+        await ctx.defer()
+        new_cat = await ctx.guild.create_category(f"Archive-{name}", position=999)
+        for cat in ctx.guild.categories:
+            if cat.name not in config.mgmt.categories:
+                continue
+            for chan in cat.text_channels:
+                await chan.edit(category=new_cat)
+        await ctx.send(f"Archived {name}")
+
     return bot
 
 def run(loop: asyncio.AbstractEventLoop):
