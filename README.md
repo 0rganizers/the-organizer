@@ -4,7 +4,7 @@ This is the management bot for the discord server of the Organizers CTF team.
 
 Some planned/wanted features include
 - [X] Create a new channel for a challenge
-    - [ ] Make sure a new channel goes to the top of the category
+    - [X] Make sure a new channel goes before solved challenges
 - [X] Make a channel/challenge as solved
 - [X] Prevent unauthorized use
 - [ ] Create/remove challenge categories?

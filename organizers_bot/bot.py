@@ -64,7 +64,7 @@ def setup():
     @require_role()
     async def create_challenge_channel(ctx: discord_slash.SlashContext, category: str, challenge: str):
         cat = discord.utils.find(lambda c: c.name == category, ctx.guild.categories)
-        created = await ctx.guild.create_text_channel(challenge, category=cat)
+        created = await ctx.guild.create_text_channel(challenge, position=0, category=cat)
         await ctx.send(f"The channel for <#{created.id}> ({category}) was created")
 
     @slash.slash(name="solved",
