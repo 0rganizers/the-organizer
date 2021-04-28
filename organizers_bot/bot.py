@@ -1,6 +1,7 @@
 from . import config
 
 import asyncio
+import functools
 import logging
 import typing
 
@@ -8,6 +9,20 @@ import discord                                                                  
 import discord_slash                                                            # type: ignore
 from discord_slash.utils.manage_commands import create_option, create_choice    # type: ignore
 from discord_slash.model import SlashCommandOptionType                          # type: ignore
+
+def require_role(minreq=None):
+    if minreq is None:
+        minreq = config.mgmt.player_role
+
+    def decorator(f):
+        @functools.wraps(f)
+        async def wrapper(ctx: discord_slash.SlashContext, *args, **kw):
+            if minreq not in [r.id for r in ctx.author.roles]:
+                await ctx.send("Get lost!")
+            else:
+                return await f(ctx, *args, **kw)
+        return wrapper
+    return decorator
 
 def setup():
     assert config.is_loaded
@@ -46,6 +61,7 @@ def setup():
                                       option_type=SlashCommandOptionType.STRING,
                                       required=True)
                      ])
+    @require_role()
     async def create_challenge_channel(ctx: discord_slash.SlashContext, category: str, challenge: str):
         cat = discord.utils.find(lambda c: c.name == category, ctx.guild.categories)
         created = await ctx.guild.create_text_channel(challenge, category=cat)
@@ -61,6 +77,7 @@ def setup():
                                    required=False)
                      ]
                  )
+    @require_role()
     async def mark_solved(ctx: discord_slash.SlashContext, flag: typing.Optional[str] = None):
         await ctx.defer()
         if not ctx.channel.name.startswith("✓"):
@@ -80,6 +97,7 @@ def setup():
                                    required=True)
                      ]
                  )
+    @require_role()
     async def archive(ctx: discord_slash.SlashContext, name: str):
         if ctx.guild is None:
             return

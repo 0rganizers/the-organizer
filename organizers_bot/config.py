@@ -12,6 +12,8 @@ class BotConfig:
 @dataclasses.dataclass
 class ManagementConfig:
     categories: list[str]
+    player_role: int
+    admin_role: int
 
 def load(filename: pathlib.Path):
     global is_loaded, bot, mgmt
@@ -24,6 +26,8 @@ def load(filename: pathlib.Path):
                 )
         mgmt = ManagementConfig(
                 conf['mgmt']['categories'],
+                conf['mgmt']['player_role'],
+                conf['mgmt']['admin_role'],
                 )
     is_loaded = True
 

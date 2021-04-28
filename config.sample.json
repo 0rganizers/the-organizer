@@ -8,6 +8,8 @@
         "categories": [
             "pwn",
             "crypto"
-        ]
+        ],
+        "player_role": 1234567890,
+        "admin_role": 1234567890
     }
 }

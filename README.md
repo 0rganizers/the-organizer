@@ -6,7 +6,7 @@ Some planned/wanted features include
 - [X] Create a new channel for a challenge
     - [ ] Make sure a new channel goes to the top of the category
 - [X] Make a channel/challenge as solved
-- [ ] Prevent unauthorized use
+- [X] Prevent unauthorized use
 - [ ] Create/remove challenge categories?
 - [X] Archive all current "active" challenge channels
 - [ ] Manage logins/passwords for contests
