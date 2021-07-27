@@ -14,9 +14,17 @@ class ManagementConfig:
     categories: list[str]
     player_role: int
     admin_role: int
+    transcript_channel: int
+    loading_emoji: str
+
+@dataclasses.dataclass
+class S3Config:
+    bucket: str
+    key: str
+    keyID: str
 
 def load(filename: pathlib.Path):
-    global is_loaded, bot, mgmt
+    global is_loaded, bot, mgmt, s3
     with filename.open("r") as configfile:
         conf = json.load(configfile)
         bot = BotConfig(
@@ -28,10 +36,18 @@ def load(filename: pathlib.Path):
                 conf['mgmt']['categories'],
                 conf['mgmt']['player_role'],
                 conf['mgmt']['admin_role'],
+                conf['mgmt']['transcript_channel'],
+                conf['mgmt']['loading_emoji']
                 )
+        s3 = S3Config(
+            conf['s3']['bucket'],
+            conf['s3']['key'],
+            conf['s3']['keyID']
+        )
     is_loaded = True
 
 logging.basicConfig(level=logging.INFO)
 is_loaded: bool = False
 bot: BotConfig
 mgmt: ManagementConfig
+s3: S3Config

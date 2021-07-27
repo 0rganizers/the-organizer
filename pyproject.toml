@@ -11,6 +11,8 @@ repository = "https://git.sr.ht/~robin_jadoul/organizers-bot"
 python = "^3.9"
 "discord.py" = "^1.7.1"
 discord-py-slash-command = "^1.1.1"
+chat-exporter = "^1.6.1"
+backblaze = "^0.1.0"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.812"

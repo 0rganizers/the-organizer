@@ -10,6 +10,13 @@
             "crypto"
         ],
         "player_role": 1234567890,
-        "admin_role": 1234567890
+        "admin_role": 1234567890,
+        "transcript_channel": 1234567890,
+        "loading_emoji": "<a:name:1234567890>"
+    },
+    "s3": {
+        "bucket": "bucket_id",
+        "key": "key",
+        "keyID": "key_id"
     }
 }
