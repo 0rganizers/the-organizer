@@ -11,7 +11,6 @@ import discord_slash                                                            
 from discord_slash.utils.manage_commands import create_option, create_choice    # type: ignore
 from discord_slash.model import SlashCommandOptionType                          # type: ignore
 
-import chat_exporter
 import io
 import os
 

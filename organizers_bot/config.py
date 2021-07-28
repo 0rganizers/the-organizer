@@ -20,6 +20,7 @@ class ManagementConfig:
 @dataclasses.dataclass
 class S3Config:
     bucket: str
+    bucket_name: str
     key: str
     keyID: str
 
@@ -41,6 +42,7 @@ def load(filename: pathlib.Path):
                 )
         s3 = S3Config(
             conf['s3']['bucket'],
+            conf['s3']['bucket_name'],
             conf['s3']['key'],
             conf['s3']['keyID']
         )

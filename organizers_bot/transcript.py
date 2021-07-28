@@ -7,12 +7,13 @@ import discord.http
 import discord_slash
 import asyncio
 import aiohttp
-import backblaze
 import os
 from urllib import parse
 import hashlib
 import copy
 import json
+import aiobotocore
+import aiobotocore.client
 
 log = logging.getLogger("transcript")
 
@@ -64,23 +65,26 @@ class TranscriptManager:
     def __init__(self, bot: discord.Client) -> None:
         self.log = log.getChild("manager")
         self.bot = bot
-        self.s3 = backblaze.Awaiting(
-            key_id=config.s3.keyID,
-            key=config.s3.key
-        )
+        self.s3: aiobotocore.client.AioBaseClient = None
         self.s3_init = False
-        self.s3_bucket: backblaze.AwaitingBucket = None
+        # self.s3_bucket: backblaze.AwaitingBucket = None
         self.session = aiohttp.ClientSession()
         self.existing_assets = set()
 
     async def ensure_backblaze(self):
         if not self.s3_init:
             self.s3_init = True
-            await self.s3.authorize()
-            self.s3_bucket = self.s3.bucket(config.s3.bucket)
-            async for data, bucket in self.s3.buckets():
-                log.info("Bucket: %s", data.name)
-            log.info("Uploading to s3 bucket %s", self.s3_bucket.bucket_id)
+            session = aiobotocore.get_session()
+            self.s3 = await session._create_client('s3',
+                endpoint_url='https://s3.us-west-002.backblazeb2.com',
+                aws_access_key_id = config.s3.keyID,
+                aws_secret_access_key = config.s3.key
+            )
+            # await self.s3.authorize()
+            # self.s3_bucket = self.s3.bucket(config.s3.bucket)
+            # async for data, bucket in self.s3.buckets():
+            #     log.info("Bucket: %s", data.name)
+            # log.info("Uploading to s3 bucket %s", self.s3_bucket.bucket_id)
 
     async def create(self, category: discord.CategoryChannel, ctx: discord_slash.SlashContext):
         self.log.info("Creating transcript for %s", category.name)
@@ -98,14 +102,44 @@ class TranscriptManager:
         sha1 = hashlib.sha1(contents).hexdigest()
         # delete any pre-existing assets.
         existing_ok = False
-        async for existing in self.s3_bucket.file_names(backblaze.settings.FileSettings(None, prefix=target_path)):
-            filem, file, _ = existing
-            if sha1 != filem.content_sha1:
-                await file.delete()
+        self.log.info("Saving asset to %s", target_path)
+        response: dict = await self.s3.list_objects_v2(Bucket=config.s3.bucket_name, Prefix=target_path)
+        for existing in response.get("Contents", []):
+            # self.log.info("Have existing %s", existing)
+            key = existing["Key"]
+            obj = await self.s3.head_object(
+                Bucket=config.s3.bucket_name,
+                Key=key
+            )
+            # self.log.info("Have existing obj: %s", obj)
+            existing_sha1 = None
+            if "Metadata" in obj:
+                if "sha1" in obj["Metadata"]:
+                    existing_sha1 = obj["Metadata"]["sha1"]
+            if existing_sha1 != sha1:
+                self.log.info("Deleting out of date %s", target_path)
+                versions: dict = await self.s3.list_object_versions(
+                    Bucket=config.s3.bucket_name,
+                    Prefix=target_path
+                )
+                for version in versions.get("Versions", []) + versions.get("DeleteMarkers", []):
+                    await self.s3.delete_object(Bucket=config.s3.bucket_name, Key=key, VersionId=version["VersionId"])
             else:
-                return filem.file_name
-        filem, file = await self.s3_bucket.upload(backblaze.settings.UploadSettings(target_path), contents)
-        self.log.info("Uploaded to %s", file.file_id)
+                self.log.info("Found existing one: %s (%s, %s)", target_path, existing_sha1, sha1)
+                return key
+
+        # async for existing in self.s3_bucket.file_names(backblaze.settings.FileSettings(None, prefix=target_path)):
+        #     filem, file, _ = existing
+        #     if sha1 != filem.content_sha1:
+        #         await file.delete()
+        #     else:
+        #         return filem.file_name
+        # filem, file = await self.s3_bucket.upload(backblaze.settings.UploadSettings(target_path), contents)
+        filename = os.path.basename(target_path)
+        # self.log.info("type: %s, dir: %s", type(self.s3), dir(self.s3))
+        await self.s3.put_object(Bucket=config.s3.bucket_name, Key=target_path, Body=contents, Metadata={"sha1" : sha1})
+        self.log.info("Finished upload to %s", target_path)
+        # self.log.info("Uploaded to %s", file.file_id)
 
     async def save_asset(self, discord_url: discord.Asset) -> str:
         """Save an asset found at discord_url to assets/path_from_discord_url.
