@@ -16,6 +16,7 @@
     },
     "s3": {
         "bucket": "bucket_id",
+        "bucket_name": "bucket_name",
         "key": "key",
         "keyID": "key_id"
     }
