@@ -1,4 +1,3 @@
-import chat_exporter
 from . import config
 import logging
 import discord
