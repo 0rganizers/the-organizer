@@ -311,7 +311,8 @@ class Transcript:
             await self.mgr.save_json(og_msgs, orig_path)
         except:
             log.exception("Failed to build transcript for channel %s", channel.name)
-            self.update_status(f"Failed to build transcript for channel {channel.name}")
+            self.ctx.channel.send(f"Failed to build transcript for channel {channel.name}")
+            # self.update_status(f"Failed to build transcript for channel {channel.name}")
             raise
         # with open("test.json", "w") as f:
         #     json.dump(changed_msgs, f, indent=4, sort_keys=True)
