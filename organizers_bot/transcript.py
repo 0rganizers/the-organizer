@@ -175,6 +175,8 @@ class TranscriptManager:
             return target_path
         self.existing_assets.add(target_path)
         async with self.session.get(url) as resp:
+            if resp.status in [404, 401]:
+                return url
             resp.raise_for_status()
             contents = await resp.content.read()
             log.info("Downloaded contents %s: %d", url, len(contents))
