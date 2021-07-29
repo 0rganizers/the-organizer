@@ -204,7 +204,7 @@ class TranscriptManager:
                 new_url = await self.save_url(url)
                 msg["sticker_items"][idx]["url"] = new_url
         for idx, attachment in enumerate(message.attachments):
-            new_url = await self.save_url(attachment.proxy_url)
+            new_url = await self.save_url(attachment.url)
             msg["attachments"][idx]["proxy_url"] = new_url
             msg["attachments"][idx]["url"] = new_url
         for idx, embed in enumerate(message.embeds):
