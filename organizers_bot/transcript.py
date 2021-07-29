@@ -209,6 +209,8 @@ class TranscriptManager:
         for idx, embed in enumerate(message.embeds):
             embed: discord.Embed
             provider = embed.provider.name
+            if provider is discord.Embed.Empty:
+                provider = "unknown"
             log.info("Saving embed %s", embed)
             url_parsed = parse.urlparse(embed.url)
             base_path = os.path.basename(url_parsed.path)
