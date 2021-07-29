@@ -286,26 +286,31 @@ class Transcript:
         list
             List of message json objects.
         """
-        channel_folder = os.path.join(self.json_folder, channel.name)
-        self.log.info("Building messages for channel %s, %s", channel.name, type(channel._state))
-        await self.update_status(f"Exporting {channel.name}")
-        message: discord.message.Message
-        og_msgs = []
-        changed_msgs = []
-        channel_meta = os.path.join(channel_folder, "meta.json")
-        channel_json = await self.http.get_channel(channel.id)
-        await self.mgr.save_json(channel_json, channel_meta)
-        async for item in json_history(channel, oldest_first=True):
-            message, data = item
-            # self.log.info("Retrieved message: %s (%s)", message, data)
-            changed = await self.mgr.save_msg_contents(message, copy.deepcopy(data))
-            changed_msgs.append(changed)
-            og_msgs.append(data)
-        import json
-        messages_path = os.path.join(channel_folder, "messages.json")
-        await self.mgr.save_json(changed_msgs, messages_path)
-        orig_path = os.path.join(channel_folder, "messages.orig.json")
-        await self.mgr.save_json(og_msgs, orig_path)
+        try:
+            channel_folder = os.path.join(self.json_folder, channel.name)
+            self.log.info("Building messages for channel %s, %s", channel.name, type(channel._state))
+            await self.update_status(f"Exporting {channel.name}")
+            message: discord.message.Message
+            og_msgs = []
+            changed_msgs = []
+            channel_meta = os.path.join(channel_folder, "meta.json")
+            channel_json = await self.http.get_channel(channel.id)
+            await self.mgr.save_json(channel_json, channel_meta)
+            async for item in json_history(channel, oldest_first=True):
+                message, data = item
+                # self.log.info("Retrieved message: %s (%s)", message, data)
+                changed = await self.mgr.save_msg_contents(message, copy.deepcopy(data))
+                changed_msgs.append(changed)
+                og_msgs.append(data)
+            import json
+            messages_path = os.path.join(channel_folder, "messages.json")
+            await self.mgr.save_json(changed_msgs, messages_path)
+            orig_path = os.path.join(channel_folder, "messages.orig.json")
+            await self.mgr.save_json(og_msgs, orig_path)
+        except:
+            log.exception("Failed to build transcript for channel %s", channel.name)
+            self.update_status(f"Failed to build transcript for channel {channel.name}")
+            raise
         # with open("test.json", "w") as f:
         #     json.dump(changed_msgs, f, indent=4, sort_keys=True)
         # with open("originals.json", "w") as f:
