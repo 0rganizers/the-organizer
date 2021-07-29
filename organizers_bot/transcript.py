@@ -137,7 +137,7 @@ class TranscriptManager:
         filename = os.path.basename(target_path)
         # self.log.info("type: %s, dir: %s", type(self.s3), dir(self.s3))
         await self.s3.put_object(Bucket=config.s3.bucket_name, Key=target_path, Body=contents, Metadata={"sha1" : sha1})
-        self.log.info("Finished upload to %s", target_path)
+        # self.log.info("Finished upload to %s", target_path)
         # self.log.info("Uploaded to %s", file.file_id)
 
     async def save_asset(self, discord_url: discord.Asset) -> str:
@@ -175,6 +175,7 @@ class TranscriptManager:
             return target_path
         self.existing_assets.add(target_path)
         async with self.session.get(url) as resp:
+            resp.raise_for_status()
             contents = await resp.content.read()
             log.info("Downloaded contents %s: %d", url, len(contents))
             await self.save_contents(target_path, contents)
@@ -211,12 +212,12 @@ class TranscriptManager:
             provider = embed.provider.name
             if provider is discord.Embed.Empty:
                 provider = "unknown"
-            log.info("Saving embed %s", embed)
+            # log.info("Saving embed %s", embed)
             url_parsed = parse.urlparse(embed.url)
             base_path = os.path.basename(url_parsed.path)
             target_path = os.path.join("assets", "embeds", provider)
-            log.info("Target path: %s", target_path)
-            log.info("Video: %s. Thumb: %s. Image: %s", embed.video.url, embed.thumbnail.proxy_url, embed.image.proxy_url)
+            # log.info("Target path: %s", target_path)
+            # log.info("Video: %s. Thumb: %s. Image: %s", embed.video.url, embed.thumbnail.proxy_url, embed.image.proxy_url)
             embed_dict = msg["embeds"][idx]
             if embed.video.url is not discord.Embed.Empty:
                 video_path = os.path.join(target_path, "video.mp4")
@@ -227,7 +228,7 @@ class TranscriptManager:
                 embed_dict["thumbnail"]["url"] = new_url
                 embed_dict["thumbnail"]["proxy_url"] = new_url
             if embed.image.proxy_url is not discord.Embed.Empty:
-                self.log.info("Embed image: %s", embed.image)
+                # self.log.info("Embed image: %s", embed.image)
                 new_url = await self.save_url(embed.image.proxy_url, os.path.join(target_path, "image.png"))
                 embed_dict["image"]["url"] = new_url
                 embed_dict["image"]["proxy_url"] = new_url
@@ -239,7 +240,7 @@ class TranscriptManager:
         return msg
 
     async def save_json(self, data, filepath):
-        self.log.info("Saving json to %s", filepath)
+        # self.log.info("Saving json to %s", filepath)
         json_data = json.dumps(data).encode("utf8")
         await self.save_contents(filepath, json_data)
 
@@ -309,9 +310,9 @@ class Transcript:
             await self.mgr.save_json(changed_msgs, messages_path)
             orig_path = os.path.join(channel_folder, "messages.orig.json")
             await self.mgr.save_json(og_msgs, orig_path)
-        except:
+        except Exception as e:
             log.exception("Failed to build transcript for channel %s", channel.name)
-            await self.ctx.channel.send(f"Failed to build transcript for channel {channel.name}")
+            await self.ctx.channel.send(f"Failed to build transcript for channel {channel.name}: {e}")
             # self.update_status(f"Failed to build transcript for channel {channel.name}")
             raise
         # with open("test.json", "w") as f:
