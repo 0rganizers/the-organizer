@@ -1,3 +1,4 @@
+from discord.embeds import Embed
 from . import config
 
 import asyncio
@@ -109,6 +110,16 @@ def setup():
             for chan in cat.text_channels:
                 await chan.edit(category=new_cat)
         await ctx.send(f"Archived {name}")
+
+    @bot.event
+    async def on_message(message: discord.Message):
+        porco_filename = False
+        for attach in message.attachments:
+            if "porcodio" in attach.filename:
+                porco_filename = True
+                break
+        if porco_filename or "porcodio" in message.content:
+            await message.reply("https://i.imgur.com/Do0ooMf.gif")
 
     return bot
 
