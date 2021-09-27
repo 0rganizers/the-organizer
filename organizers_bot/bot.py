@@ -74,7 +74,7 @@ def setup():
                      create_option(name="flag",
                                    description="The flag that was obtained",
                                    option_type=SlashCommandOptionType.STRING,
-                                   required=False)
+                                   required=True)
                      ]
                  )
     @require_role()
