@@ -3,16 +3,17 @@ from . import transcript
 
 import asyncio
 import functools
+import hashlib
+import io
 import logging
 import typing
+import os
 
 import discord                                                                  # type: ignore
 import discord_slash                                                            # type: ignore
 from discord_slash.utils.manage_commands import create_option, create_choice    # type: ignore
 from discord_slash.model import SlashCommandOptionType                          # type: ignore
 
-import io
-import os
 
 def require_role(minreq=None):
     if minreq is None:
@@ -156,8 +157,33 @@ def setup():
         # await ctx.send(f"Transcript created [here]({msg.jump_url})")
     return bot
 
-
-        
+    @slash.slash(name="nuke",
+                 description="Remove all channels in a given category, destructive. Use /export first!",
+                 guild_ids=[config.bot.guild],
+                 options=[
+                     create_option(name="category",
+                                   description="Which category to nuke.",
+                                   option_type=SlashCommandOptionType.CHANNEL,
+                                   required=True),
+                     create_option(name="confirm",
+                                   description="Are you really sure? Did you /export it?",
+                                   option_type=SlashCommandOptionType.STRING,
+                                   required=False)
+                     ])
+    @require_role(config.mgmt.admin_role)
+    async def nuke(ctx: discord_slash.SlashContext, category: discord.abc.GuildChannel, confirm: str = None):
+        if not isinstance(category, discord.CategoryChannel):
+            await ctx.send("That's not a category, buddy...", hidden=True)
+            return
+        reference = hashlib.sha256((category.name + str(category.position)).encode()).hexdigest()
+        if reference != confirm:
+            await ctx.send(f"Are you ***REALLY*** sure you performed the /export?? If so, use this as confirmation code: {reference}", hidden=True)
+            return
+        await ctx.defer()
+        for chan: discord.TextChannel in category.channels:
+            await chan.delete(reason=f"Nuked by {ctx.author.name} with #{category.name}")
+        await category.delete(reason=f"Nuked by {ctx.author.name}")
+        await ctx.send(f"Category {category.name} was nuked on request of {ctx.author.name}", hidden=False)
 
 def run(loop: asyncio.AbstractEventLoop):
     bot = setup()
