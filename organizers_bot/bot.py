@@ -176,7 +176,7 @@ def setup():
             return
         reference = hashlib.sha256((category.name + str(category.position)).encode()).hexdigest()
         if reference != confirm:
-            await ctx.send(f"Are you ***REALLY*** sure you performed the /export?? If so, use this as confirmation code: {reference}", hidden=True)
+            await ctx.send(f"Are you ***REALLY*** sure you performed the /export for {category.name}?? If so, use this as confirmation code: {reference}", hidden=True)
             return
         await ctx.defer()
         for chan in category.channels:
