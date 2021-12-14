@@ -338,6 +338,6 @@ class Transcript:
             await self.update_status("Failed to build transcript!", True)
             return
         log.info("Finished with transcript")
-        await self.update_status("Finished Building Transcript", True)
+        await self.update_status(f"Finished Building Transcript for {self.category.name}", True)
 
 
