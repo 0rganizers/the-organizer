@@ -180,7 +180,7 @@ def setup():
             await ctx.send(f"Are you ***REALLY*** sure you performed the /export?? If so, use this as confirmation code: {reference}", hidden=True)
             return
         await ctx.defer()
-        for chan: discord.TextChannel in category.channels:
+        for chan in category.channels:
             await chan.delete(reason=f"Nuked by {ctx.author.name} with #{category.name}")
         await category.delete(reason=f"Nuked by {ctx.author.name}")
         await ctx.send(f"Category {category.name} was nuked on request of {ctx.author.name}", hidden=False)
