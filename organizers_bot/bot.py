@@ -155,7 +155,6 @@ def setup():
         # transcript_channel: discord.TextChannel = bot.get_channel(config.mgmt.transcript_channel)
         # msg = await transcript_channel.send(f"Transcript for {ctx.channel.name}", file=transcript_file)
         # await ctx.send(f"Transcript created [here]({msg.jump_url})")
-    return bot
 
     @slash.slash(name="nuke",
                  description="Remove all channels in a given category, destructive. Use /export first!",
@@ -184,6 +183,11 @@ def setup():
             await chan.delete(reason=f"Nuked by {ctx.author.name} with #{category.name}")
         await category.delete(reason=f"Nuked by {ctx.author.name}")
         await ctx.send(f"Category {category.name} was nuked on request of {ctx.author.name}", hidden=False)
+
+
+
+    ## Keep this last :)
+    return bot
 
 def run(loop: asyncio.AbstractEventLoop):
     bot = setup()
