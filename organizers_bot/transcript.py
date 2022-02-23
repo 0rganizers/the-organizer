@@ -57,7 +57,7 @@ class JSONHistoryIterator(discord.iterators.HistoryIterator):
             for element in data:
                 await self.messages.put((self.state.create_message(channel=channel, data=element), element))
 
-def json_history(mable: discord.abc.Messageable, limit=100, before=None, after=None, around=None, oldest_first=None):
+def json_history(mable: discord.abc.Messageable, limit=10000, before=None, after=None, around=None, oldest_first=None):
     return JSONHistoryIterator(mable, limit=limit, before=before, after=after, around=around, oldest_first=oldest_first)
 
 class TranscriptManager:
