@@ -24,8 +24,13 @@ class S3Config:
     key: str
     keyID: str
 
+@dataclasses.dataclass
+class ArchiveConfig:
+    url: str
+    secret: bytes
+
 def load(filename: pathlib.Path):
-    global is_loaded, bot, mgmt, s3
+    global is_loaded, bot, mgmt, s3, archive
     with filename.open("r") as configfile:
         conf = json.load(configfile)
         bot = BotConfig(
@@ -46,6 +51,10 @@ def load(filename: pathlib.Path):
             conf['s3']['key'],
             conf['s3']['keyID']
         )
+        archive = ArchiveConfig(
+            conf['archive']['url'],
+            bytes.fromhex(conf['archive']['secret']),
+        )
     is_loaded = True
 
 logging.basicConfig(level=logging.INFO)
@@ -53,3 +62,4 @@ is_loaded: bool = False
 bot: BotConfig
 mgmt: ManagementConfig
 s3: S3Config
+archive: ArchiveConfig

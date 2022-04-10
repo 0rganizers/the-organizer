@@ -13,6 +13,10 @@ import copy
 import json
 import aiobotocore
 import aiobotocore.client
+import hashlib
+import hmac
+import json
+import urllib
 
 log = logging.getLogger("transcript")
 
@@ -89,6 +93,7 @@ class TranscriptManager:
         self.log.info("Creating transcript for %s", category.name)
         trans = Transcript(self, category, ctx)
         await trans.build()
+        await trans.sync_to_archive()
 
     def get_target_path(self, url: str) -> str:
         discord_parsed = parse.urlparse(url)
@@ -337,6 +342,25 @@ class Transcript:
             await self.update_status("Failed to build transcript!", True)
             return
         log.info("Finished with transcript")
-        await self.update_status(f"Finished Building Transcript for {self.category.name}", True)
+        await self.update_status(f"Finished Building Transcript for {self.category.name}")
 
+    async def sync_to_archive(self):
+        body = json.dumps({"category_name": self.category.name}).encode()
+        signature = hmac.new(config.archive.secret, body, digestmod=hashlib.sha256).hexdigest()
+        headers = {"Content-Type": "application/json", "X-Signature": signature}
 
+        log.info(f"Syncing category {self.category.name} to the archive")
+        await self.update_status(f"Syncing category {self.category.name} to the archive")
+
+        try:
+            timeout = aiohttp.ClientTimeout(total=10*60)
+            url = urllib.parse.urljoin(config.archive.url, 'update')
+            async with self.mgr.session.post(url, headers=headers, data=body, timeout=timeout) as r:
+                r.raise_for_status()
+                log.debug(f"Archive server replied with {await r.text()}")
+        except Exception as e:
+            log.exception(f"Failed to sync category {self.category.name} to the archive")
+            await self.update_status(f"Failed to sync category {self.category.name} to the archive: {e}", done=True)
+            raise
+
+        await self.update_status(f"Synced category {self.category.name} to the archive", done=True)

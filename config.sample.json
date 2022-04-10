@@ -19,5 +19,9 @@
         "bucket_name": "bucket_name",
         "key": "key",
         "keyID": "key_id"
+    },
+    "archive": {
+        "url": "https://example.com/",
+        "secret": "hex-encoded secret"
     }
 }
