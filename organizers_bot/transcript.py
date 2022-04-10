@@ -175,7 +175,7 @@ class TranscriptManager:
             return target_path
         self.existing_assets.add(target_path)
         async with self.session.get(url) as resp:
-            if resp.status in [404, 401, 403]:
+            if resp.status in [404, 401, 403, 415]:
                 return url
             resp.raise_for_status()
             contents = await resp.content.read()
@@ -307,7 +307,6 @@ class Transcript:
                 changed = await self.mgr.save_msg_contents(message, copy.deepcopy(data))
                 changed_msgs.append(changed)
                 og_msgs.append(data)
-            import json
             messages_path = os.path.join(channel_folder, "messages.json")
             await self.mgr.save_json(changed_msgs, messages_path)
             orig_path = os.path.join(channel_folder, "messages.orig.json")
