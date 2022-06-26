@@ -459,9 +459,10 @@ async def add_task(ctx: discord_slash.SlashContext, created, name: str, category
     if current_ctf is None: return
     result = await current_ctf.createTask(name, category, description, flag, solved_prefix = solved_prefix)
     if ctx is not None:
-        hackmd_url = "\nhackmd url: " + URL + result.url
-        ctfnote_url = "\nctfnote url: " + URL + f"/#/ctf/{current_ctf.id}-{current_ctf.name}/task/{result.id}-{result.title}"
-        msg = await created.send(hackmd_url + ctfnote_url)
+        # discord trick: <URL> does not show link previews, while URL does
+        hackmd_url = "\nhackmd (alternative url): " + f"<{URL}{result.url}>"
+        ctfnote_url = "\nctfnote url: " + f"<{URL}/#/ctf/{current_ctf.id}-{current_ctf.name}/task/{result.id}-{result.title}>"
+        msg = await created.send(ctfnote_url + hackmd_url)
         await msg.pin()
 
 async def assign_player(ctx: discord_slash.SlashContext, playername):
