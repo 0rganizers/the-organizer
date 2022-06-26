@@ -101,7 +101,7 @@ def setup():
             msg = await ctx.send(f"The flag: `{flag}`")
             await msg.pin()
 
-        await ctfnote.getTaskByName(ctx.channel.name, solved_prefix="✓-").updateFlag(flag)
+        await ctfnote.update_flag(ctx.channel.name, flag, solved_previx="✓-")
 
         await ctx.send("done", hidden=True)
 

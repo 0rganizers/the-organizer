@@ -433,6 +433,16 @@ async def update_login_info(ctx: discord_slash.SlashContext, URL_:str, admin_log
     await login()
     await refresh_ctf(ctx)
 
+async def update_flag(channel_name: str, flag: str, solved_prefix="✓-"):
+    """
+        Updates the flag on ctfnote. To unset, simply set `flag` to the empty string.
+        Handles the case where the channel name was marked as solved as well.
+    """
+    current_ctf = await refresh_ctf(ctx) 
+    if current_ctf is None: return
+    update_flag_response = await ctfnote.getTaskByName(channel_name, solved_prefix=solved_prefix).updateFlag(flag or "")
+    return update_flag_response
+
 async def add_task(ctx: discord_slash.SlashContext, created, name: str, category: str, flag: str = "", description: str = "", solved_prefix: str = "✓-"):
     current_ctf = await refresh_ctf(ctx) 
     if current_ctf is None: return

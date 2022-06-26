@@ -69,4 +69,4 @@ Currently in development by:
   docker run --rm -it orgzbot:latest
   ```
 
-  
+* in the discord server, specify the ctfnote credentials with the `/ctfnote_update_auth` command.
