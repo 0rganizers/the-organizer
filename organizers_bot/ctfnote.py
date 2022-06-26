@@ -2,6 +2,12 @@ from gql import Client, gql
 from gql.transport.exceptions import TransportQueryError
 from gql.transport.aiohttp import AIOHTTPTransport
 from gql.transport.websockets import WebsocketsTransport
+import logging
+from gql.transport.aiohttp import log as aio_logger
+aio_logger.setLevel(logging.WARNING)
+from gql.transport.websockets import log as websockets_logger
+websockets_logger.setLevel(logging.WARNING)
+
 from string import ascii_letters, digits
 from random import choice, randrange
 from datetime import datetime, timezone
