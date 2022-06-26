@@ -453,7 +453,7 @@ async def add_task(ctx: discord_slash.SlashContext, created, name: str, category
         msg = await created.send(hackmd_url + ctfnote_url)
         await msg.pin()
 
-async def assign_player(ctx: discord_slash.SlashContext, playername:str):
+async def assign_player(ctx: discord_slash.SlashContext, playername):
     current_ctf = await refresh_ctf(ctx) 
     if current_ctf is None: return
 
@@ -473,7 +473,7 @@ async def assign_player(ctx: discord_slash.SlashContext, playername:str):
         await task.unassignUser(pid)
     print(task.people)
     await task.assignUser(user_id)
-    await ctx.send(f"Player {playername} was assigned to challenge {task.title}")
+    await ctx.send(f"Player {playername.mention} was assigned to challenge {task.title}")
 
 async def whos_leader_of_this_shit(ctx: discord_slash.SlashContext):
     current_ctf = await refresh_ctf(ctx) 
@@ -484,8 +484,7 @@ async def whos_leader_of_this_shit(ctx: discord_slash.SlashContext):
     people = task.people['nodes']
     if len(people) > 0:
         user = people[0]['profile']['username']
-        mention = ctx.guild.get_member_named(user).mention
-        await ctx.send(f"{user} is this challenge lead. How many ctf minutes until flag {mention} ?")
+        await ctx.send(f"{user} is this challenge lead. People are wondering how many ctf minutes until flag.")
     else:
         await ctx.send("No one is working on this challenge :(")
 
