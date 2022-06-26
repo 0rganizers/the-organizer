@@ -427,10 +427,10 @@ async def update_login_info(ctx: discord_slash.SlashContext, URL_:str, admin_log
     await login()
     await refresh_ctf(ctx)
 
-async def add_task(ctx: discord_slash.SlashContext, created, name: str, category: str):
+async def add_task(ctx: discord_slash.SlashContext, created, name: str, category: str, flag: str = "", description: str = ""):
     current_ctf = await refresh_ctf(ctx) 
     if current_ctf is None: return
-    result = await current_ctf.createTask(name, category, "description", "flag")
+    result = await current_ctf.createTask(name, category, description, flag)
     if ctx is not None:
         hackmd_url = "\nhackmd url: " + URL + result.url
         ctfnote_url = "\nctfnote url: " + URL + f"/#/ctf/{current_ctf.id}-{current_ctf.name}/task/{result.id}-{result.title}"

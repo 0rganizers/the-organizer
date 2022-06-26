@@ -100,6 +100,9 @@ def setup():
         if flag is not None:
             msg = await ctx.send(f"The flag: `{flag}`")
             await msg.pin()
+
+        ctfnote.updateFlag(ctx, flag)
+
         await ctx.send("done", hidden=True)
 
     @slash.slash(name="archive",
