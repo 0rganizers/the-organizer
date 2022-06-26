@@ -1,5 +1,6 @@
 from . import config
 from . import transcript
+from . import ctfnote
 
 import asyncio
 import functools
@@ -32,7 +33,9 @@ def require_role(minreq=None):
 def setup():
     assert config.is_loaded
 
-    bot = discord.Client(intents=discord.Intents.default())
+    intents = discord.Intents.default()
+    intents.members = True
+    bot = discord.Client(intents=intents)
     slash = discord_slash.SlashCommand(bot, sync_commands=True)
     log = logging.getLogger("bot")
     trans_mgr = transcript.TranscriptManager(bot)
@@ -73,6 +76,7 @@ def setup():
         cat = discord.utils.find(lambda c: c.name == category, ctx.guild.categories)
         created = await ctx.guild.create_text_channel(challenge, position=0, category=cat)
         await ctx.send(f"The channel for <#{created.id}> ({category}) was created")
+        await ctfnote.add_task(ctx, created, challenge, category)
 
     @slash.slash(name="solved",
                  description="The challenge was solved",
@@ -185,6 +189,47 @@ def setup():
         await ctx.send(f"Category {category.name} was nuked on request of {ctx.author.name}", hidden=False)
 
 
+
+    @slash.slash(name="ctfnote_update_auth",
+                 description="Update url and auth login info for the ctfnote integration",
+                 guild_ids=[config.bot.guild],
+                 options=[
+                     create_option(name="url",
+                                   description="The url ctfnote is hosted at",
+                                   option_type=SlashCommandOptionType.STRING,
+                                   required=True),
+                     create_option(name="adminlogin",
+                                   description="Admin login password",
+                                   option_type=SlashCommandOptionType.STRING,
+                                   required=True),
+                     create_option(name="adminpass",
+                                   description="Admin login password",
+                                   option_type=SlashCommandOptionType.STRING,
+                                   required=True)
+                     ])
+    @require_role(config.mgmt.player_role)
+    async def ctfnote_update_auth(ctx: discord_slash.SlashContext, url:str, adminlogin:str, adminpass:str):
+        await ctfnote.update_login_info(ctx, url, adminlogin, adminpass)
+
+    @slash.slash(name="ctfnote_assign_player",
+                 description="Assign given player as challenge lead for this channel",
+                 guild_ids=[config.bot.guild],
+                 options=[
+                     create_option(name="playername",
+                                   description="The player that becomes leader",
+                                   option_type=SlashCommandOptionType.USER,
+                                   required=True),
+                 ])
+    @require_role(config.mgmt.player_role)
+    async def ctfnote_update_auth(ctx: discord_slash.SlashContext, playername: discord.member.Member):
+        await ctfnote.assign_player(ctx, playername)
+
+    @slash.slash(name="ctfnote_who_leads",
+                 description="Ping who's the current leader of this challenge",
+                 guild_ids=[config.bot.guild])
+    @require_role(config.mgmt.player_role)
+    async def ctfnote_leader(ctx: discord_slash.SlashContext):
+        await ctfnote.whos_leader_of_this_shit(ctx)
 
     ## Keep this last :)
     return bot
