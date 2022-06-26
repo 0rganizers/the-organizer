@@ -5,13 +5,15 @@ description = "The management bot for the Organizers CTF discord"
 authors = ["Robin Jadoul <~robin_jadoul/inbox@lists.sr.ht>"]
 license = "MIT"
 readme = "README.md"
-repository = "https://git.sr.ht/~robin_jadoul/organizers-bot"
+repository = "https://github.com/0rganizers/the-organizer"
 
 [tool.poetry.dependencies]
 python = "^3.9"
 "discord.py" = "^1.7.1"
 discord-py-slash-command = "^1.1.1"
 aiobotocore = "^1.3.3"
+gql = "^3.3.0"
+websockets = "^10.3"
 
 [tool.poetry.dev-dependencies]
 mypy = "^0.812"
