@@ -227,7 +227,7 @@ def setup():
                                    required=True),
                  ])
     @require_role(config.mgmt.player_role)
-    async def ctfnote_update_auth(ctx: discord_slash.SlashContext, playername: discord.member.Member):
+    async def ctfnote_update_assigned_player(ctx: discord_slash.SlashContext, playername: discord.member.Member):
         await ctfnote.assign_player(ctx, playername)
 
     @slash.slash(name="ctfnote_who_leads",
