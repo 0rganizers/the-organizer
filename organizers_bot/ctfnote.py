@@ -3,7 +3,7 @@ from gql.transport.exceptions import TransportQueryError
 from gql.transport.aiohttp import AIOHTTPTransport
 from gql.transport.websockets import WebsocketsTransport
 from string import ascii_letters, digits
-from random import choice
+from random import choice, randrange
 from datetime import datetime, timezone
 import logging
 import asyncio
@@ -348,7 +348,7 @@ class CTFNote:
         token = result["createInvitationLink"]["invitationLinkResponse"]["token"]
 
         # password = "".join([choice(ascii_letters+digits) for _ in range(16)])
-        password = "organizerssostrong"
+        password = "organizerssostrong" + str(randrange(1000, 9999))
         tmp = CTFNote(self.url)
         await tmp.login(user, password, token)
         new_acc = await tmp.getMe()
@@ -407,6 +407,7 @@ class CTFNote:
         loop.create_task(start_listening(queries.subscribe_to_task, "task_event"))
 
 
+# These credentials can be changed with a bot command
 URL = "http://cyanpencil.xyz:8099"
 admin_login = "a"
 admin_pass = "a"

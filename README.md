@@ -70,3 +70,13 @@ Currently in development by:
   ```
 
 * in the discord server, specify the ctfnote credentials with the `/ctfnote_update_auth` command.
+
+## CTFNote Integration
+
+*Information about the internal assumptions used. This should only be relevant when you change the code.*
+
+* We use the channel name as task name 
+  * If it was marked as solved, that should be stripped
+* We use each player's exact discord name as `Name#discriminator`
+* Players who are not signed up yet get a password assigned when we want to use their account
+* The bot has a lot of permissions on ctfnote

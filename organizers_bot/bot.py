@@ -216,7 +216,7 @@ def setup():
     async def ctfnote_update_auth(ctx: discord_slash.SlashContext, url:str, adminlogin:str, adminpass:str):
         await ctfnote.update_login_info(ctx, url, adminlogin, adminpass)
 
-    @slash.slash(name="ctfnote_assign_player",
+    @slash.slash(name="ctfnote_assign_lead",
                  description="Assign given player as challenge lead for this channel",
                  guild_ids=[config.bot.guild],
                  options=[
