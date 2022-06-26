@@ -80,7 +80,7 @@ def setup():
         cat = discord.utils.find(lambda c: c.name == category, ctx.guild.categories)
         created = await ctx.guild.create_text_channel(challenge, position=0, category=cat)
         await ctx.send(f"The channel for <#{created.id}> ({category}) was created")
-        await ctfnote.add_task(ctx, created, challenge, category)
+        await ctfnote.add_task(ctx, created, challenge, category, solved_prefix = "✓-")
 
     @slash.slash(name="solved",
                  description="The challenge was solved",
@@ -101,7 +101,7 @@ def setup():
             msg = await ctx.send(f"The flag: `{flag}`")
             await msg.pin()
 
-        ctfnote.updateFlag(ctx, flag)
+        await ctfnote.getTaskByName(ctx.channel.name, solved_prefix="✓-").updateFlag(flag)
 
         await ctx.send("done", hidden=True)
 

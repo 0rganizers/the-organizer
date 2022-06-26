@@ -136,19 +136,25 @@ class CTF:
         })
         self._update(result["ctf"])
 
-    async def getTask(self, id: int):
+    async def getTask(self, id: int, solved_prefix: str = "✓-"):
         if not self.tasks:
             await self._fullupdate()
         return next(filter(lambda x: x.id == id, self.tasks))
 
     async def getTaskByName(self, name: str):
-        await self._fullupdate() # wwe always update bc we assume players have been creating new tasks
+        await self._fullupdate() # we always update bc we assume players have been creating new tasks
+        # If the task was marked as solved, we need to ignore the prefix
+        if name.startswith(solved_prefix):
+            name = name[len(solved_prefix):]
+
         return next(filter(lambda x: x.title == name, self.tasks))
 
-    async def createTask(self, name, category, description="", flag=""):
+    async def createTask(self, name, category, description="", flag="", solved_prefix: str = "✓-"):
         """
         Create a new task for this CTF
         """
+        if name.startswith(solved_prefix):
+            name = name[len(solved_prefix):]
 
         present_task = list(filter(lambda t: t.title == name and 
                 t.category == category, self.tasks))
@@ -427,10 +433,10 @@ async def update_login_info(ctx: discord_slash.SlashContext, URL_:str, admin_log
     await login()
     await refresh_ctf(ctx)
 
-async def add_task(ctx: discord_slash.SlashContext, created, name: str, category: str, flag: str = "", description: str = ""):
+async def add_task(ctx: discord_slash.SlashContext, created, name: str, category: str, flag: str = "", description: str = "", solved_prefix: str = "✓-"):
     current_ctf = await refresh_ctf(ctx) 
     if current_ctf is None: return
-    result = await current_ctf.createTask(name, category, description, flag)
+    result = await current_ctf.createTask(name, category, description, flag, solved_prefix = solved_prefix)
     if ctx is not None:
         hackmd_url = "\nhackmd url: " + URL + result.url
         ctfnote_url = "\nctfnote url: " + URL + f"/#/ctf/{current_ctf.id}-{current_ctf.name}/task/{result.id}-{result.title}"
