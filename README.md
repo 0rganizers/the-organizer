@@ -46,10 +46,6 @@ Currently in development by:
 
   * see under "OAuth 2" the client ID and bot token
 
-* Go to "Bot" and enable the "server members intent"
-
-  * Note: This will be tricky once we have a server with more than 100 members! It will require some verification.
-
 * Go to "OAuth2", "URL Generator"
 
   * select `applications.commands`
