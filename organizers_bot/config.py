@@ -11,7 +11,7 @@ class BotConfig:
 
 @dataclasses.dataclass
 class ManagementConfig:
-    categories: str
+    categories: list[str]
     player_role: int
     admin_role: int
     transcript_channel: int
