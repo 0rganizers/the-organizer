@@ -35,6 +35,10 @@ def setup():
 
     intents = discord.Intents.default()
     intents.members = True
+    # the warning about using commands.Bot instead of discord.Client is explained here:
+    # https://stackoverflow.com/a/51235308/2550406
+    # It is mostly about convenience: commands.Bot subclasses discord.Client and offers some features.
+    # I am not changing this now, since I see no urgent reason to do so.
     bot = discord.Client(intents=intents)
     slash = discord_slash.SlashCommand(bot, sync_commands=True)
     log = logging.getLogger("bot")
