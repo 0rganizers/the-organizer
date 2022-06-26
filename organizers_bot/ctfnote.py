@@ -28,35 +28,35 @@ class Task:
     def __repr__(self):
         return f"Task: {self.title} ({self.category}) @ {self.url}"
 
-    def _update(self):
+    async def _update(self):
         """
         Send the update of category, desc, flag, title
         """
         query = gql(queries.update_task)
-        result = self.client.execute_async(query, variable_values={
+        result = await self.client.execute_async(query, variable_values={
             "id": self.id,
             "category": self.category,
             "title": self.title,
             "description": self.desc,
             "flag": self.flag,
         })
-        self.parent._fullupdate()
+        await self.parent._fullupdate()
 
-    def updateTitle(self, newtitle: str):
+    async def updateTitle(self, newtitle: str):
         """
         Update the title of the challenge
         """
         
         self.title = newtitle
-        self._update()
+        await self._update()
 
-    def updateFlag(self, newflag: str):
+    async def updateFlag(self, newflag: str):
         """
         Update the title of the challenge
         """
         
         self.flag = newflag
-        self._update()
+        await self._update()
 
     async def delete(self):
         """
@@ -66,7 +66,7 @@ class Task:
         result = await self.client.execute_async(query, variable_values={
             "id": self.id
         })
-        self.parent._fullupdate()
+        await self.parent._fullupdate()
 
     async def startWorkingOn(self):
         """
@@ -136,12 +136,12 @@ class CTF:
         })
         self._update(result["ctf"])
 
-    async def getTask(self, id: int, solved_prefix: str = "✓-"):
+    async def getTask(self, id: int):
         if not self.tasks:
             await self._fullupdate()
         return next(filter(lambda x: x.id == id, self.tasks))
 
-    async def getTaskByName(self, name: str):
+    async def getTaskByName(self, name: str, solved_prefix: str ="✓-"):
         await self._fullupdate() # we always update bc we assume players have been creating new tasks
         # If the task was marked as solved, we need to ignore the prefix
         if name.startswith(solved_prefix):
@@ -434,14 +434,18 @@ async def update_login_info(ctx: discord_slash.SlashContext, URL_:str, admin_log
     await login()
     await refresh_ctf(ctx)
 
-async def update_flag(channel_name: str, flag: str, solved_prefix="✓-"):
+async def update_flag(ctx: discord_slash.SlashContext, flag: str, solved_prefix="✓-"):
     """
         Updates the flag on ctfnote. To unset, simply set `flag` to the empty string.
         Handles the case where the channel name was marked as solved as well.
     """
     current_ctf = await refresh_ctf(ctx) 
     if current_ctf is None: return
-    update_flag_response = await ctfnote.getTaskByName(channel_name, solved_prefix=solved_prefix).updateFlag(flag or "")
+
+    channel_name = ctx.channel.name
+    update_flag_response = await current_ctf.getTaskByName(channel_name, solved_prefix=solved_prefix)
+    if update_flag_response is not None:
+        update_flag_response = await update_flag_response.updateFlag(flag or "")
     return update_flag_response
 
 async def add_task(ctx: discord_slash.SlashContext, created, name: str, category: str, flag: str = "", description: str = "", solved_prefix: str = "✓-"):

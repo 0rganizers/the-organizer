@@ -95,13 +95,14 @@ def setup():
         await ctx.defer()
         if not ctx.channel.name.startswith("✓"):
             await ctx.channel.edit(name=f"✓-{ctx.channel.name}", position=999)
+
+        ctfnote_res = await ctfnote.update_flag(ctx, flag, solved_prefix="✓-")
+
         if flag is not None:
             msg = await ctx.send(f"The flag: `{flag}`")
             await msg.pin()
-
-        await ctfnote.update_flag(ctx.channel.name, flag, solved_previx="✓-")
-
-        await ctx.send("done", hidden=True)
+        else:
+            await ctx.send("removed flag.")
 
     @slash.slash(name="archive",
                  description="Move all current challenges to a new archive",
