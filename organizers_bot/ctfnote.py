@@ -1,4 +1,5 @@
-from gql import Client, gql
+import gql
+from gql import Client
 from gql.transport.exceptions import TransportQueryError
 from gql.transport.aiohttp import AIOHTTPTransport
 from gql.transport.websockets import WebsocketsTransport
@@ -38,7 +39,7 @@ class Task:
         """
         Send the update of category, desc, flag, title
         """
-        query = gql(queries.update_task)
+        query = gql.gql(queries.update_task)
         result = await self.client.execute_async(query, variable_values={
             "id": self.id,
             "category": self.category,
@@ -68,7 +69,7 @@ class Task:
         """
         Delete this Task from the tasklist
         """
-        query = gql(queries.delete_task)
+        query = gql.gql(queries.delete_task)
         result = await self.client.execute_async(query, variable_values={
             "id": self.id
         })
@@ -78,7 +79,7 @@ class Task:
         """
         Mark this challenge as being worked on by this client
         """
-        query = gql(queries.start_working_on)
+        query = gql.gql(queries.start_working_on)
         try:
             result = await self.client.execute_async(query, variable_values={
                 "taskId": self.id
@@ -90,7 +91,7 @@ class Task:
         """
         Mark this challenge as no longer being worked on by this client
         """
-        query = gql(queries.stop_working_on)
+        query = gql.gql(queries.stop_working_on)
         try:
             result = await self.client.execute_async(query, variable_values={
                 "taskId": self.id
@@ -99,14 +100,14 @@ class Task:
             pass
 
     async def assignUser(self, userid: int):
-        query = gql(queries.assign_user)
+        query = gql.gql(queries.assign_user)
         result = await self.client.execute_async(query,variable_values={
             "taskId": self.id,
             "userId": userid
         })
 
     async def unassignUser(self, userid: int):
-        query = gql(queries.unassign_user)
+        query = gql.gql(queries.unassign_user)
         result = await self.client.execute_async(query,variable_values={
             "taskId": self.id,
             "userId": userid
@@ -136,7 +137,7 @@ class CTF:
             self.tasks = []
 
     async def _fullupdate(self):
-        query = gql(queries.get_full_ctf)
+        query = gql.gql(queries.get_full_ctf)
         result = await self.client.execute_async(query, variable_values={
             "id": self.id
         })
@@ -167,7 +168,7 @@ class CTF:
         if present_task:
             return present_task[0]
 
-        query = gql(queries.create_task)
+        query = gql.gql(queries.create_task)
 
         result = await self.client.execute_async(query, variable_values={
             "ctfId": self.id,
@@ -205,7 +206,7 @@ class CTFNote:
         self.users = []
 
         if token:
-            query = gql(queries.register_with_token)
+            query = gql.gql(queries.register_with_token)
             result = await client.execute_async(query, variable_values={
                 "login": username,
                 "password": password,
@@ -223,7 +224,7 @@ class CTFNote:
                 )
         else:
 
-            login = gql(queries.login_query)
+            login = gql.gql(queries.login_query)
             result = await client.execute_async(login, variable_values={
                 "login": username,
                 "password": password
@@ -243,7 +244,7 @@ class CTFNote:
         """
         Retrieve the current logged in account
         """
-        query = gql(queries.get_me)
+        query = gql.gql(queries.get_me)
         result = await self.client.execute_async(query)
         return result["me"]
 
@@ -252,7 +253,7 @@ class CTFNote:
         """
         Retrieve the team you're in right now
         """
-        query = gql(queries.get_team)
+        query = gql.gql(queries.get_team)
         result = await self.client.execute_async(query)
         return result["profiles"]["nodes"]
 
@@ -263,7 +264,7 @@ class CTFNote:
         :ivar int first: Limit the results to the first few results
         :ivar int offset: Start search after the first offset many results
         """
-        query = gql(queries.get_past_ctfs)
+        query = gql.gql(queries.get_past_ctfs)
         result = await self.client.execute_async(query,variable_values={
             "first":first,
             "offset":offset
@@ -274,7 +275,7 @@ class CTFNote:
         """
         Retrieve a list of upcoming CTFs
         """
-        query = gql(queries.get_incoming_ctfs)
+        query = gql.gql(queries.get_incoming_ctfs)
         result = await self.client.execute_async(query)
         return result["incomingCtf"]["nodes"]
 
@@ -282,7 +283,7 @@ class CTFNote:
         """
         Retrieve a list of all CTFs
         """
-        query = gql(queries.get_ctfs)
+        query = gql.gql(queries.get_ctfs)
         result = await self.client.execute_async(query)
         return result["ctfs"]["nodes"]
 
@@ -294,7 +295,7 @@ class CTFNote:
         Thus don't use this method, use the checked one (importCTF without an
         underscore)
         """
-        query = gql(queries.import_ctf)
+        query = gql.gql(queries.import_ctf)
         return await self.client.execute_async(query,variable_values={"id":id})
 
     async def importCtf(self, id: int):
@@ -317,7 +318,7 @@ class CTFNote:
         """
         Create a new CTF with given name and start/end dates
         """
-        query = gql(queries.create_ctf)
+        query = gql.gql(queries.create_ctf)
         result = await self.client.execute_async(query, variable_values={
             "title": name,
             "startTime": str(start).split(".")[0].split("+")[0]+"Z",
@@ -335,7 +336,7 @@ class CTFNote:
         """
         Get the full representation of the CTF with a given id
         """
-        query = gql(queries.get_full_ctf)
+        query = gql.gql(queries.get_full_ctf)
             
         result = await self.client.execute_async(query, variable_values={
             "id": id
@@ -347,7 +348,7 @@ class CTFNote:
         """
         Creates a guest account invitation link
         """
-        query = gql(queries.create_account)
+        query = gql.gql(queries.create_account)
         result = await self.client.execute_async(query, variable_values={
             "role": "USER_MEMBER"
         })
@@ -362,12 +363,12 @@ class CTFNote:
         return new_acc['id'], password
 
     async def newToken(self):
-        query = gql(queries.new_token)
+        query = gql.gql(queries.new_token)
         result = await self.client.execute_async(query)
         return result["newToken"]
 
     async def getUsers(self):
-        query = gql(queries.get_users)
+        query = gql.gql(queries.get_users)
         result = await self.client.execute_async(query)
         return result["users"]["nodes"]
 
@@ -403,7 +404,7 @@ class CTFNote:
                     )
             ws_client = Client(transport=transport)
 
-            async for event in ws_client.subscribe_async(gql(subscription)):
+            async for event in ws_client.subscribe_async(gql.gql(subscription)):
                 print(name, event)
 
         loop.create_task(start_listening(queries.subscribe_flags, "flag"))
@@ -414,14 +415,15 @@ class CTFNote:
 
 
 # These credentials can be changed with a bot command
-URL = "http://cyanpencil.xyz:8099"
+# URL _must_ end with a slash
+URL = "https://cyanpencil.xyz/note/"
 admin_login = "a"
-admin_pass = "a"
+admin_pass = "b"
 ctfnote: CTFNote = CTFNote("")
 
 async def login():
     global ctfnote
-    ctfnote = CTFNote(URL + "/graphql")
+    ctfnote = CTFNote(URL + "graphql")
     await ctfnote.login(admin_login, admin_pass)
 
 async def refresh_ctf(ctx: discord_slash.SlashContext):
@@ -435,10 +437,21 @@ async def refresh_ctf(ctx: discord_slash.SlashContext):
 async def update_login_info(ctx: discord_slash.SlashContext, URL_:str, admin_login_:str, admin_pass_:str):
     global URL, admin_pass, admin_login
     URL = URL_
+    if not URL.endswith('/'):
+        URL = f"{URL}/"
     admin_pass = admin_pass_
     admin_login = admin_login_
-    await login()
-    await refresh_ctf(ctx)
+    try:
+        await login()
+        current_ctf = await refresh_ctf(ctx)
+    #except gql.transport.aiohttp.client_exceptions.InvalidURL as e:
+    # I tried to be specific but it only exists once it crashes...
+    except Exception as e:
+        await ctx.send("No ctfnote for you. Can't reach the site or something.")
+        print(e)
+
+    if current_ctf is not None and ctfnote.token is not None:
+        await ctx.send("Success.")
 
 async def update_flag(ctx: discord_slash.SlashContext, flag: str, solved_prefix="✓-"):
     """
@@ -461,7 +474,7 @@ async def add_task(ctx: discord_slash.SlashContext, created, name: str, category
     if ctx is not None:
         # discord trick: <URL> does not show link previews, while URL does
         hackmd_url = "\nhackmd (in case the other is broken): " + f"<{URL}{result.url}>"
-        ctfnote_url = "\nctfnote url: " + f"<{URL}/#/ctf/{current_ctf.id}-{current_ctf.name}/task/{result.id}-{result.title}>"
+        ctfnote_url = "\nctfnote url: " + f"<{URL}#/ctf/{current_ctf.id}-{current_ctf.name}/task/{result.id}-{result.title}>"
         msg = await created.send(ctfnote_url + hackmd_url)
         await msg.pin()
 
