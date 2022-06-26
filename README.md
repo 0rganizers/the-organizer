@@ -21,7 +21,7 @@ Some planned/wanted features include
     - [x] `/ctfnote_assign_player` assigns a player to be the challenge leader and annotates it in ctfnote. (can be done by player)
         - [x] If the player has not registered, it will be autoregistered
     - [x] `/ctfnote_who_leads` (can be done by player)
-    - [ ] `/flag` should mark it as flagged on ctfnote
+    - [x] `/flag` should mark it as flagged on ctfnote
     - [ ] support for more than one concurrent ctf
     - [ ] better authentication - the ctfnote auth only is for the ctfnote stuff, but the underlying hedgedoc markdown can be accessed directly by the pad urls. They are hard to guess, but still...
 
@@ -62,6 +62,10 @@ Currently in development by:
 
 * copy the `config.sample.json`  to `config.json` and fill it in.
 
+  * the `archive`  section can be anything as long as it is set - except if you want to make use of the archive functionality, of course.
+
+  * for local testing, you also don't need any `s3`  settings.
+
 * build and run:
 
   ```
@@ -69,7 +73,7 @@ Currently in development by:
   docker run --rm -it orgzbot:latest
   ```
 
-* in the discord server, specify the ctfnote credentials with the `/ctfnote_update_auth` command.
+* in the discord server, specify the ctfnote credentials with the `/ctfnote_update_auth` command. If you don't want to use it, set it to something invalid i guess...
 
 ## CTFNote Integration
 
