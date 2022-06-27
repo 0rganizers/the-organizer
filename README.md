@@ -16,7 +16,8 @@ Some planned/wanted features include
 - [ ] Team- and individual-based opt-in and opt-out
 - [ ] ctfnote integration
     - [x] specify server settings with `/ctfnote_update_auth`  (can be done by player)
-    - [x] create a ctfnote pad for a `/chall` (can be done by player)
+    - [x] create a ctfnote pad for a `/chal` (can be done by player)
+        - [x] Takes an optional argument for concurrent ctfs.
     - [x] pin ctfnote link to the channel
     - [x] `/ctfnote_assign_player` assigns a player to be the challenge leader and annotates it in ctfnote. (can be done by player)
         - [x] If the player has not registered, it will be autoregistered

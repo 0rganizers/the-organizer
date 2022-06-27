@@ -445,17 +445,20 @@ async def refresh_ctf(ctx: discord_slash.SlashContext, ctfid: int = None):
             await ctx.send("Query failed. Check ctfnote credentials.")
             return None
 
+    failure_msg = ""
     if ctfid is not None:
         stored_ctf_id = ctfid
+        failure_msg = "Invalid ctf provided as argument."
     else:
         botdb = (await extract_botdb(await get_pinned_ctfnote_message(ctx)))
         stored_ctf_id = (botdb or dict()).get('ctfid', None)
+        failure_msg = "Invalid ctf id saved in pinned message"
 
     if stored_ctf_id is not None:
         ctfs = await ctfnote.getCtfs()
         ctf_meta = next(filter(lambda ctf: str(ctf['id']) == str(stored_ctf_id), ctfs), None)
         if ctf_meta is None:
-            await ctx.send("Invalid ctf id saved in pinned message.")
+            await ctx.send(failure_msg)
             return None
         return CTF(ctfnote.client, ctf_meta)
     else:
@@ -468,6 +471,7 @@ async def refresh_ctf(ctx: discord_slash.SlashContext, ctfid: int = None):
 
 async def update_login_info(ctx: discord_slash.SlashContext, URL_:str, admin_login_:str, admin_pass_:str):
     global URL, admin_pass, admin_login
+    await ctx.defer(hidden=True)
     URL = URL_
     if not URL.endswith('/'):
         URL = f"{URL}/"
@@ -479,12 +483,12 @@ async def update_login_info(ctx: discord_slash.SlashContext, URL_:str, admin_log
     #except gql.transport.aiohttp.client_exceptions.InvalidURL as e:
     # I tried to be specific but it only exists once it crashes...
     except Exception as e:
-        await ctx.send("No ctfnote for you. Can't reach the site or something.")
+        await ctx.send("No ctfnote for you. Can't reach the site or something.", hidden=True)
         print(e)
         return
 
     if current_ctf is not None and ctfnote.token is not None:
-        await ctx.send("Success.")
+        await ctx.send("Success.", hidden=True)
 
 async def update_flag(ctx: discord_slash.SlashContext, flag: str, solved_prefix="✓-"):
     """
