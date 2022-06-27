@@ -154,7 +154,7 @@ class CTF:
         if name.startswith(solved_prefix):
             name = name[len(solved_prefix):]
 
-        return next(filter(lambda x: x.title == name, self.tasks))
+        return next(filter(lambda x: x.title == name, self.tasks), None)
 
     async def createTask(self, name, category, description="", flag="", solved_prefix: str = "✓-"):
         """
@@ -493,6 +493,9 @@ async def assign_player(ctx: discord_slash.SlashContext, playername):
         user_id = user[0]['id']
 
     task = await current_ctf.getTaskByName(ctx.channel.name)
+    if task is None:
+        await ctx.send("This challenge does not exist on ctfnote.")
+        return
     for person in task.people['nodes']:
         pid = person['profileId']
         await task.unassignUser(pid)
@@ -506,6 +509,10 @@ async def whos_leader_of_this_shit(ctx: discord_slash.SlashContext):
 
 
     task = await current_ctf.getTaskByName(ctx.channel.name)
+    if task is None:
+        await ctx.send("This challenge does not exist on ctfnote.")
+        return
+
     people = task.people['nodes']
     if len(people) > 0:
         user = people[0]['profile']['username']
