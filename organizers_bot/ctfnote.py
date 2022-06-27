@@ -16,6 +16,7 @@ import logging
 import asyncio
 from . import queries
 import discord_slash                                                            # type: ignore
+import json
 
 log = logging.getLogger("CTFNote")
 
@@ -428,16 +429,30 @@ async def login():
 
 async def refresh_ctf(ctx: discord_slash.SlashContext):
     global ctfnote
+    # make sure ctfnote exists, we can connect to it, are logged in
     if ctfnote is None or ctfnote.token is None: 
         try:
             await login()
         except TransportQueryError:
             await ctx.send("Query failed. Check ctfnote credentials.")
             return None
-    current_ctf = await ctfnote.getActiveCtf()
-    if current_ctf is None:
-        await ctx.send("No active ctf! Go on ctfnote and fix the dates!")
-    return current_ctf
+
+    stored_ctf_id = None # TODO: actually retrieve the stored ctf id somehow.
+                         # TODO: allow the user to specify the ctf id on task creation
+    if stored_ctf_id is not None:
+        ctfs = await self.getCtfs()
+        ctf_meta = next(filter(lambda ctf: str(ctf['id']) == str(stored_ctf_id), ctfs), None)
+        if ctf_meta is None:
+            await ctx.send("Invalid ctf id saved in pinned message.")
+            return None
+        return CTF(ctfnote.client, ctf_meta)
+    else:
+        # if no ctf id is stored in the pinned message, we assume the first in the list of 
+        # currently running CTFs is the right one
+        current_ctf = await ctfnote.getActiveCtf()
+        if current_ctf is None:
+            await ctx.send("No active ctf! Go on ctfnote and fix the dates!")
+        return current_ctf
 
 async def update_login_info(ctx: discord_slash.SlashContext, URL_:str, admin_login_:str, admin_pass_:str):
     global URL, admin_pass, admin_login
@@ -478,9 +493,14 @@ async def add_task(ctx: discord_slash.SlashContext, created, name: str, category
     result = await current_ctf.createTask(name, category, description, flag, solved_prefix = solved_prefix)
     if ctx is not None:
         # discord trick: <URL> does not show link previews, while URL does
-        hackmd_url = "\nhackmd (in case the other is broken): " + f"<{URL}{result.url}>"
         ctfnote_url = "\nctfnote url: " + f"<{URL}#/ctf/{current_ctf.id}-{current_ctf.name}/task/{result.id}-{result.title}>"
-        msg = await created.send(ctfnote_url + hackmd_url)
+        hackmd_url = "\nhackmd (in case the other is broken): " + f"<{URL}{result.url}>"
+        # we need to save the ctf id somewhere to distinguish between concurrent ctfs.
+        botdb = json.dumps({
+            'ctfid': current_ctf.id,
+            })
+        bot_data_store = f"\n||botdb:{botdb}||"
+        msg = await created.send(ctfnote_url + hackmd_url + bot_data_store)
         await msg.pin()
 
 async def assign_player(ctx: discord_slash.SlashContext, playername):
