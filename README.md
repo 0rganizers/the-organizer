@@ -24,6 +24,7 @@ Some planned/wanted features include
     - [x] `/flag` should mark it as flagged on ctfnote
     - [ ] support for more than one concurrent ctf
     - [ ] better authentication - the ctfnote auth only is for the ctfnote stuff, but the underlying hedgedoc markdown can be accessed directly by the pad urls. They are hard to guess, but still...
+    - [ ] sync solved state back into the discord channel in case a player adds the flag via ctfnote
 
 
 Currently in development by:
@@ -84,3 +85,5 @@ Currently in development by:
 * We use each player's exact discord name as `Name#discriminator`
 * Players who are not signed up yet get a password assigned when we want to use their account
 * The bot has a lot of permissions on ctfnote
+* The bot itself has no state. Any information must be stored in the discord pinned messages or the ctfnote.
+* To disable ctfnote integration, just set some invalid credentials (e.g. `example.com`)
