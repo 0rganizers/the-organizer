@@ -504,21 +504,25 @@ async def assign_player(ctx: discord_slash.SlashContext, playername):
     await ctx.send(f"Player {playername.mention} was assigned to challenge {task.title}")
 
 async def whos_leader_of_this_shit(ctx: discord_slash.SlashContext):
+    hide = True
+    ctx.defer(hidden=hide) # reply will only be visible to *this* user.
+                           # We defer here just in case the refresh ctf could take a while.
+                           # might not be needed.
     current_ctf = await refresh_ctf(ctx) 
     if current_ctf is None: return
 
 
     task = await current_ctf.getTaskByName(ctx.channel.name)
     if task is None:
-        await ctx.send("This challenge does not exist on ctfnote.")
+        await ctx.send("This challenge does not exist on ctfnote.", hidden=hide)
         return
 
     people = task.people['nodes']
     if len(people) > 0:
         user = people[0]['profile']['username']
-        await ctx.send(f"{user} is this challenge lead. People are wondering how many ctf minutes until flag.")
+        await ctx.send(f"{user} is this challenge lead. People are wondering how many ctf minutes until flag.", hidden=hide)
     else:
-        await ctx.send("No one is working on this challenge :(")
+        await ctx.send("No one is working on this challenge :(", hidden=hide)
 
 
 
