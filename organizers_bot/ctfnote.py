@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 import logging
 import asyncio
 from . import queries
+import discord
 import discord_slash                                                            # type: ignore
 import json
 
@@ -428,6 +429,11 @@ async def login():
     await ctfnote.login(admin_login, admin_pass)
 
 async def refresh_ctf(ctx: discord_slash.SlashContext):
+    """
+        returns the current ctf object. It is determined based on the info in the pinned message
+        of the channel with the given context, and if that is not specified then uses the first of
+        the currently active CTFs.
+    """
     global ctfnote
     # make sure ctfnote exists, we can connect to it, are logged in
     if ctfnote is None or ctfnote.token is None: 
@@ -437,10 +443,11 @@ async def refresh_ctf(ctx: discord_slash.SlashContext):
             await ctx.send("Query failed. Check ctfnote credentials.")
             return None
 
-    stored_ctf_id = None # TODO: actually retrieve the stored ctf id somehow.
                          # TODO: allow the user to specify the ctf id on task creation
+    botdb = (await extract_botdb(await get_pinned_ctfnote_message(ctx)))
+    stored_ctf_id = (botdb or dict()).get('ctfid', None)
     if stored_ctf_id is not None:
-        ctfs = await self.getCtfs()
+        ctfs = await ctfnote.getCtfs()
         ctf_meta = next(filter(lambda ctf: str(ctf['id']) == str(stored_ctf_id), ctfs), None)
         if ctf_meta is None:
             await ctx.send("Invalid ctf id saved in pinned message.")
@@ -469,6 +476,7 @@ async def update_login_info(ctx: discord_slash.SlashContext, URL_:str, admin_log
     except Exception as e:
         await ctx.send("No ctfnote for you. Can't reach the site or something.")
         print(e)
+        return
 
     if current_ctf is not None and ctfnote.token is not None:
         await ctx.send("Success.")
@@ -496,6 +504,7 @@ async def add_task(ctx: discord_slash.SlashContext, created, name: str, category
         ctfnote_url = "\nctfnote url: " + f"<{URL}#/ctf/{current_ctf.id}-{current_ctf.name}/task/{result.id}-{result.title}>"
         hackmd_url = "\nhackmd (in case the other is broken): " + f"<{URL}{result.url}>"
         # we need to save the ctf id somewhere to distinguish between concurrent ctfs.
+        # Note: the pinned message is identified by containing the word "botdb" and "ctfnote url:".
         botdb = json.dumps({
             'ctfid': current_ctf.id,
             })
@@ -548,6 +557,42 @@ async def whos_leader_of_this_shit(ctx: discord_slash.SlashContext):
         await ctx.send(f"{user} is this challenge lead. People are wondering how many ctf minutes until flag.", hidden=hide)
     else:
         await ctx.send("No one is working on this challenge :(", hidden=hide)
+
+async def get_pinned_ctfnote_message(ctx: discord_slash.SlashContext):
+    """
+        returns the first pinned message that looks like it matches the message the bot
+        pins on channel creation.
+        Returns None if no matching message found.
+    """
+    pins = await ctx.channel.pins() # this is a list of Message objects
+    # https://discordpy.readthedocs.io/en/stable/api.html#discord.Message.content
+    msg = next(filter(lambda pin: 
+            'botdb:' in pin.content and
+            'ctfnote url:' in pin.content
+        , pins), None)
+
+    return msg
+
+async def extract_botdb(msg: discord.Message):
+    """
+        returns the botdb dict that was stored in the pinned message in the botdb: line.
+        Can return None on failure.
+    """
+    if msg is None:
+        return None
+    # find the line with the botdb
+    botdb_line = next(filter(lambda line: line.startswith('||botdb:'), msg.content.split('\n')), None)
+    if botdb_line is None:
+        return None
+    # parse the data
+    botdb_strs = botdb_line.split('||')
+    assert len(botdb_strs) == 3
+    botdb_str = botdb_strs[1][len('botdb:'):]
+    try:
+        botdb = json.loads(botdb_str)
+    except ValueError:
+        return None
+    return botdb
 
 
 
