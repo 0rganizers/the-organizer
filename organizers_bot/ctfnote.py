@@ -428,11 +428,13 @@ async def login():
     ctfnote = CTFNote(URL + "graphql")
     await ctfnote.login(admin_login, admin_pass)
 
-async def refresh_ctf(ctx: discord_slash.SlashContext):
+async def refresh_ctf(ctx: discord_slash.SlashContext, ctfid: int = None):
     """
         returns the current ctf object. It is determined based on the info in the pinned message
         of the channel with the given context, and if that is not specified then uses the first of
         the currently active CTFs.
+
+        The argument `ctfid` overrides this ctf-selection behaviour.
     """
     global ctfnote
     # make sure ctfnote exists, we can connect to it, are logged in
@@ -443,9 +445,12 @@ async def refresh_ctf(ctx: discord_slash.SlashContext):
             await ctx.send("Query failed. Check ctfnote credentials.")
             return None
 
-                         # TODO: allow the user to specify the ctf id on task creation
-    botdb = (await extract_botdb(await get_pinned_ctfnote_message(ctx)))
-    stored_ctf_id = (botdb or dict()).get('ctfid', None)
+    if ctfid is not None:
+        stored_ctf_id = ctfid
+    else:
+        botdb = (await extract_botdb(await get_pinned_ctfnote_message(ctx)))
+        stored_ctf_id = (botdb or dict()).get('ctfid', None)
+
     if stored_ctf_id is not None:
         ctfs = await ctfnote.getCtfs()
         ctf_meta = next(filter(lambda ctf: str(ctf['id']) == str(stored_ctf_id), ctfs), None)
@@ -495,8 +500,14 @@ async def update_flag(ctx: discord_slash.SlashContext, flag: str, solved_prefix=
         update_flag_response = await update_flag_response.updateFlag(flag or "")
     return update_flag_response
 
-async def add_task(ctx: discord_slash.SlashContext, created, name: str, category: str, flag: str = "", description: str = "", solved_prefix: str = "✓-"):
-    current_ctf = await refresh_ctf(ctx) 
+async def add_task(ctx: discord_slash.SlashContext, created, name: str,
+        category: str, flag: str = "", description: str = "", 
+        solved_prefix: str = "✓-", ctfid = None):
+    """
+        Creates a ctfnote task and pins it in the channel.
+        Also stores the ctf id of the task in that message.
+    """
+    current_ctf = await refresh_ctf(ctx, ctfid = ctfid) 
     if current_ctf is None: return
     result = await current_ctf.createTask(name, category, description, flag, solved_prefix = solved_prefix)
     if ctx is not None:

@@ -71,14 +71,19 @@ def setup():
                         create_option(name="challenge",
                                       description="Challenge name",
                                       option_type=SlashCommandOptionType.STRING,
-                                      required=True)
+                                      required=True),
+                        create_option(name="ctfid",
+                                      description="The int id of the ctf in ctfnote. Can be found in the URL.",
+                                      option_type=SlashCommandOptionType.INTEGER,
+                                      required=False)
                      ])
     @require_role()
-    async def create_challenge_channel(ctx: discord_slash.SlashContext, category: str, challenge: str):
+    async def create_challenge_channel(ctx: discord_slash.SlashContext, 
+            category: str, challenge: str, ctfid = None):
         cat = discord.utils.find(lambda c: c.name == category, ctx.guild.categories)
         created = await ctx.guild.create_text_channel(challenge, position=0, category=cat)
         await ctx.send(f"The channel for <#{created.id}> ({category}) was created")
-        await ctfnote.add_task(ctx, created, challenge, category, solved_prefix = "✓-")
+        await ctfnote.add_task(ctx, created, challenge, category, solved_prefix = "✓-", ctfid = ctfid)
 
     @slash.slash(name="solved",
                  description="The challenge was solved",
