@@ -428,7 +428,12 @@ async def login():
 
 async def refresh_ctf(ctx: discord_slash.SlashContext):
     global ctfnote
-    if ctfnote is None or ctfnote.token is None: await login()
+    if ctfnote is None or ctfnote.token is None: 
+        try:
+            await login()
+        except TransportQueryError:
+            await ctx.send("Query failed. Check ctfnote credentials.")
+            return None
     current_ctf = await ctfnote.getActiveCtf()
     if current_ctf is None:
         await ctx.send("No active ctf! Go on ctfnote and fix the dates!")
@@ -499,13 +504,13 @@ async def assign_player(ctx: discord_slash.SlashContext, playername):
     for person in task.people['nodes']:
         pid = person['profileId']
         await task.unassignUser(pid)
-    print(task.people)
+    #print(task.people)
     await task.assignUser(user_id)
     await ctx.send(f"Player {playername.mention} was assigned to challenge {task.title}")
 
 async def whos_leader_of_this_shit(ctx: discord_slash.SlashContext):
-    hide = True
-    ctx.defer(hidden=hide) # reply will only be visible to *this* user.
+    hide = True # reply will only be visible to *this* user.
+    await ctx.defer(hidden=hide)
                            # We defer here just in case the refresh ctf could take a while.
                            # might not be needed.
     current_ctf = await refresh_ctf(ctx) 
