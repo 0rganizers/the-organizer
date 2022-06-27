@@ -500,6 +500,16 @@ async def update_flag(ctx: discord_slash.SlashContext, flag: str, solved_prefix=
         update_flag_response = await update_flag_response.updateFlag(flag or "")
     return update_flag_response
 
+def slugify(name:str):
+    """
+        turns an input string into something that is used in the ctftime urls for ctfs and tasks.
+        For now, this is not completely equivalent to what they actually use. Ctfnote uses an
+        npm package called slugify. We just do a best-effort approach here. If link generation fails
+        in the bot, players should just use the web interface.
+    """
+    name = name.replace(" ", "-")
+    return name
+
 async def add_task(ctx: discord_slash.SlashContext, created, name: str,
         category: str, flag: str = "", description: str = "", 
         solved_prefix: str = "✓-", ctfid = None):
@@ -512,7 +522,8 @@ async def add_task(ctx: discord_slash.SlashContext, created, name: str,
     result = await current_ctf.createTask(name, category, description, flag, solved_prefix = solved_prefix)
     if ctx is not None:
         # discord trick: <URL> does not show link previews, while URL does
-        ctfnote_url = "\nctfnote url: " + f"<{URL}#/ctf/{current_ctf.id}-{current_ctf.name}/task/{result.id}-{result.title}>"
+        ctfnote_url = "\nctfnote url: " + \
+            f"<{URL}#/ctf/{current_ctf.id}-{slugify(current_ctf.name)}/task/{result.id}-{slugify(result.title)}>"
         hackmd_url = "\nhackmd (in case the other is broken): " + f"<{URL}{result.url}>"
         # we need to save the ctf id somewhere to distinguish between concurrent ctfs.
         # Note: the pinned message is identified by containing the word "botdb" and "ctfnote url:".
@@ -534,7 +545,7 @@ async def assign_player(ctx: discord_slash.SlashContext, playername):
         user_id, password = await ctfnote.createMemberAccount(uid)
         await ctx.send(f"Account {playername} was created with password {password}")
     else:
-        print("done")
+        print("Done assigning player.")
         user_id = user[0]['id']
 
     task = await current_ctf.getTaskByName(ctx.channel.name)
