@@ -422,6 +422,7 @@ URL = "https://cyanpencil.xyz/note/"
 admin_login = "a"
 admin_pass = "b"
 ctfnote: CTFNote = CTFNote("")
+enabled: bool = False
 
 async def login():
     global ctfnote
@@ -470,9 +471,16 @@ async def refresh_ctf(ctx: discord_slash.SlashContext, ctfid: int = None):
         return current_ctf
 
 async def update_login_info(ctx: discord_slash.SlashContext, URL_:str, admin_login_:str, admin_pass_:str):
-    global URL, admin_pass, admin_login
-    await ctx.defer(hidden=True)
+    global URL, admin_pass, admin_login, enabled
     URL = URL_
+    
+    # option to completely disable ctfnote interactions until login infos are updated again.
+    if 'disable' == URL.lower() or 'disabled' == URL.lower() or '' == URL.lower():
+        enabled = False
+        await ctx.send("Disabled CTFNote integration.", hidden=False)
+        return
+    await ctx.defer(hidden=True)
+
     if not URL.endswith('/'):
         URL = f"{URL}/"
     admin_pass = admin_pass_
@@ -484,10 +492,12 @@ async def update_login_info(ctx: discord_slash.SlashContext, URL_:str, admin_log
     # I tried to be specific but it only exists once it crashes...
     except Exception as e:
         await ctx.send("No ctfnote for you. Can't reach the site or something.", hidden=True)
+        enabled = False
         print(e)
         return
 
     if current_ctf is not None and ctfnote.token is not None:
+        enabled = True
         await ctx.send("Success.", hidden=True)
 
 async def update_flag(ctx: discord_slash.SlashContext, flag: str, solved_prefix="✓-"):
@@ -521,6 +531,10 @@ async def add_task(ctx: discord_slash.SlashContext, created, name: str,
         Creates a ctfnote task and pins it in the channel.
         Also stores the ctf id of the task in that message.
     """
+    if not enabled:
+        # no reaction from the ctfnote stuff please, they only wanted to create a channel
+        return
+
     current_ctf = await refresh_ctf(ctx, ctfid = ctfid) 
     if current_ctf is None: return
     result = await current_ctf.createTask(name, category, description, flag, solved_prefix = solved_prefix)
@@ -539,6 +553,10 @@ async def add_task(ctx: discord_slash.SlashContext, created, name: str,
         await msg.pin()
 
 async def assign_player(ctx: discord_slash.SlashContext, playername):
+    if not enabled:
+        await ctx.send("CTFNote integration is currently not in use. Ignoring your request.", hidden=True)
+        return
+
     current_ctf = await refresh_ctf(ctx) 
     if current_ctf is None: return
 
@@ -564,6 +582,10 @@ async def assign_player(ctx: discord_slash.SlashContext, playername):
     await ctx.send(f"Player {playername.mention} was assigned to challenge {task.title}")
 
 async def whos_leader_of_this_shit(ctx: discord_slash.SlashContext):
+    if not enabled:
+        await ctx.send("CTFNote integration is currently not in use. Ignoring your request.", hidden=True)
+        return
+
     hide = True # reply will only be visible to *this* user.
     await ctx.defer(hidden=hide)
                            # We defer here just in case the refresh ctf could take a while.
