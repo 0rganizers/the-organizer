@@ -39,16 +39,24 @@ get_me = """
     """
 
 import_ctf = """
+            fragment CtfFragment on Ctf {  
+                  id
+                  granted
+                  ctfUrl
+                  ctftimeUrl
+                  description
+                  endTime
+                  logoUrl
+                  startTime
+                  weight
+                  title
+            }
             mutation importctf($id: Int!) {
                 importCtf(input: {ctftimeId: $id}) {    
                     ctf {   
                         ...CtfFragment
                     }
                 }
-            }
-            fragment CtfFragment on Ctf {  
-                  id  granted  ctfUrl  ctftimeUrl  description  endTime
-                logoUrl  startTime  weight  title
             }
             """
 

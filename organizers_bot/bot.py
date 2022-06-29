@@ -15,6 +15,8 @@ import discord_slash                                                            
 from discord_slash.utils.manage_commands import create_option, create_choice    # type: ignore
 from discord_slash.model import SlashCommandOptionType                          # type: ignore
 
+import traceback
+
 
 def require_role(minreq=None):
     if minreq is None:
@@ -77,7 +79,7 @@ def setup():
                                       option_type=SlashCommandOptionType.INTEGER,
                                       required=False)
                      ])
-    @require_role()
+    @require_role(config.mgmt.player_role)
     async def create_challenge_channel(ctx: discord_slash.SlashContext, 
             category: str, challenge: str, ctfid = None):
         cat = discord.utils.find(lambda c: c.name == category, ctx.guild.categories)
@@ -95,7 +97,7 @@ def setup():
                                    required=True)
                      ]
                  )
-    @require_role()
+    @require_role(config.mgmt.player_role)
     async def mark_solved(ctx: discord_slash.SlashContext, flag: typing.Optional[str] = None):
         await ctx.defer()
         if not ctx.channel.name.startswith("✓"):
@@ -119,7 +121,7 @@ def setup():
                                    required=True)
                      ]
                  )
-    @require_role()
+    @require_role(config.mgmt.player_role)
     async def archive(ctx: discord_slash.SlashContext, name: str):
         if ctx.guild is None:
             return
@@ -141,9 +143,10 @@ def setup():
                                    option_type=SlashCommandOptionType.CHANNEL,
                                    required=True)
                  ])
-    @require_role()
+    @require_role(config.mgmt.player_role)
     async def export(ctx: discord_slash.SlashContext, category: discord.abc.GuildChannel):
         # hacky but idc
+        # lucid: It seems this can be fixed by updating discordpy and discord_slash.
         if ctx.deferred or ctx.responded:
             log.info("not sure why but handler called twice, ignoring")
             return
@@ -241,6 +244,19 @@ def setup():
     @require_role(config.mgmt.player_role)
     async def ctfnote_leader(ctx: discord_slash.SlashContext):
         await ctfnote.whos_leader_of_this_shit(ctx)
+
+    @slash.slash(name="ctfnote_import",
+                 description="Create a new CTF in ctfnote by providing a ctftime event link or id.",
+                 guild_ids=[config.bot.guild],
+                 options=[
+                     create_option(name="link",
+                         description="Link or event id on ctftime",
+                         option_type=SlashCommandOptionType.STRING,
+                         required=True),
+                     ])
+    @require_role(config.mgmt.player_role)
+    async def ctfnote_import_from_ctftime(ctx: discord_slash.SlashContext, link: str):
+        await ctfnote.import_ctf_from_ctftime(ctx, link)
 
     ## Keep this last :)
     return bot

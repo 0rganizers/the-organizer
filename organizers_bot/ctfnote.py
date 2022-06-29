@@ -305,6 +305,7 @@ class CTFNote:
         imports a CTF with given CTFTime id, checks if the ctf is already
         present and doesn't add it if it is
         """
+        print("[ctfnote]: importCtf")
         for ctf in await self.getCtfs():
             try:
                 if "ctftimeUrl" in ctf and ctf["ctftimeUrl"]:
@@ -314,7 +315,39 @@ class CTFNote:
             except ValueError:
                 pass
 
+        print("[ctfnote]: _importCtf")
         return await self._importCtf(id)
+
+    async def importCtfFromCtftimeLinkOrId(self, link_or_id: str):
+        """
+        Extracts the ctftime id from the provided link if it is a ctftime link. 
+        If it is already an ID, that will be used instead.
+
+        raises ValueError if it seems to be neither an integer nor a valid ctftime event link
+        """
+        print("[ctfnote]: importCtfFromCtftimeLinkOrId")
+        link_or_id = link_or_id.strip()
+        # If all characters in the string are digits and it is not empty then we can immediately
+        # call importCtf, otherwise need to get the id out of the link string first.
+        if not(link_or_id.isdigit()):
+            # If it is a link, we first strip off the begin that might vary, and then
+            # check for the content
+            if link_or_id.startswith('https://'):
+                link_or_id = link_or_id[len('https://'):]
+
+            if link_or_id.startswith('http://'):
+                link_or_id = link_or_id[len('http://'):]
+
+            ctftime_org_event = 'ctftime.org/event/'
+            if not(link_or_id.startswith(ctftime_org_event)):
+                # that does not seem like a reasonable ctftime ctf link.
+                raise ValueError(f"Link does not start with {ctftime_org_event}")
+
+            link_or_id = link_or_id[len(ctftime_org_event):]
+            # Get rid of potential further slashes
+            link_or_id = link_or_id.replace("/", "")
+
+        return await self.importCtf(int(link_or_id))
 
     async def createCtf(self, name: str, start, end):
         """
@@ -583,7 +616,7 @@ async def assign_player(ctx: discord_slash.SlashContext, playername):
 
 async def whos_leader_of_this_shit(ctx: discord_slash.SlashContext):
     if not enabled:
-        await ctx.send("CTFNote integration is currently not in use. Ignoring your request.", hidden=True)
+        await ctx.send("CTFNote integration is currently not in use. Ignoring your request. Set up the auth first.", hidden=True)
         return
 
     hide = True # reply will only be visible to *this* user.
@@ -605,6 +638,39 @@ async def whos_leader_of_this_shit(ctx: discord_slash.SlashContext):
         await ctx.send(f"{user} is this challenge lead. People are wondering how many ctf minutes until flag.", hidden=hide)
     else:
         await ctx.send("No one is working on this challenge :(", hidden=hide)
+
+async def import_ctf_from_ctftime(ctx: discord_slash.SlashContext, ctftime_link_or_id: str):
+    if not enabled:
+        await ctx.send("CTFNote integration is currently not in use. Ignoring your request. Set up the auth first.", hidden=True)
+        return
+
+    print("[ctfnote]: starting import...")
+
+    hide = True
+    await ctx.defer(hidden=hide)
+    # For importing a CTF we need a logged in ctfnote object but not necessarily a current ctf.
+    # Running refresh_ctf would complain if there is no currently active CTF. So we don't call that here.
+    global ctfnote
+    # make sure ctfnote exists, we can connect to it, are logged in
+    if ctfnote is None or ctfnote.token is None: 
+        try:
+            await login()
+        except TransportQueryError:
+            await ctx.send("Query failed. Check ctfnote credentials.", hidden=hide)
+            return None
+    print("[ctfnote]:import A")
+
+    response = None
+    try:
+        response = await ctfnote.importCtfFromCtftimeLinkOrId(ctftime_link_or_id)
+    except ValueError:
+        await ctx.send("That link (or ctftime event id) did not work...", hidden=hide)
+        print("[ctfnote]: not B.")
+        return None
+    print("[ctfnote]:import B")
+    print(f"{response=}")
+
+    await ctx.send(f"Imported {response['title']} with weight {response['weight']} successfully. It has now id {response['id']}", hidden=hide)
 
 async def get_pinned_ctfnote_message(ctx: discord_slash.SlashContext):
     """
