@@ -614,6 +614,35 @@ async def assign_player(ctx: discord_slash.SlashContext, playername):
     await task.assignUser(user_id)
     await ctx.send(f"Player {playername.mention} was assigned to challenge {task.title}")
 
+
+async def fixup_task(ctx: discord_slash.SlashContext,
+        ctfid: int, flag: str = "", description: str = "", 
+        solved_prefix: str = "✓-"):
+    """
+    Finds, wipes, and recreates the pinned message.
+    Useful if the channel was created without a ctf - or with a wrong ctf id.
+    To be run with a context *in that channel*.
+    """
+    await ctx.defer(hidden=True)
+    prev_pinned_msg = await get_pinned_ctfnote_message(ctx)
+    reply_text = "Done."
+    if prev_pinned_msg is not None:
+        # remove the pinned message if it exists
+        # TODO: also move the tasks around on ctfnote? Is probably easier to have them persist and let the players handle it themselves though. Usually the fixup will be called with a channel without any not yet anyway.
+        await prev_pinned_msg.delete()
+        reply_text += " Any previously used ctfnote md for this channel needs to be manually pasted over. It was not removed automatically."
+
+    # Add task, with the correct ctfid
+    task_name = ctx.channel.name[len(solved_prefix):] if ctx.channel.name.startswith(solved_prefix) else ctx.channel.name
+    task_category = ctx.channel.category.name
+    await add_task(ctx, created = ctx.channel, name = task_name, category = task_category,
+            description = description, solved_prefix = solved_prefix, ctfid = ctfid)
+
+    reply_text += " The new ctfid is " + str(ctfid) +"."
+
+    await ctx.send(reply_text, hidden=True)
+
+
 async def whos_leader_of_this_shit(ctx: discord_slash.SlashContext):
     if not enabled:
         await ctx.send("CTFNote integration is currently not in use. Ignoring your request. Set up the auth first.", hidden=True)

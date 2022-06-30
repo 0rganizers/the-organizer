@@ -87,6 +87,20 @@ def setup():
         await ctx.send(f"The channel for <#{created.id}> ({category}) was created")
         await ctfnote.add_task(ctx, created, challenge, category, solved_prefix = "✓-", ctfid = ctfid)
 
+
+    @slash.slash(name="ctfnote_fixup_channel",
+                 description="Use this if you need to set/change the ctf id of the current channel after the channel creation.",
+                 guild_ids=[config.bot.guild],
+                 options=[
+                        create_option(name="ctfid",
+                                      description="The int id of the ctf in ctfnote. Can be found in the URL.",
+                                      option_type=SlashCommandOptionType.INTEGER,
+                                      required=False)
+                     ])
+    @require_role(config.mgmt.player_role)
+    async def ctfnote_fixup_channel(ctx: discord_slash.SlashContext, ctfid = None):
+        await ctfnote.fixup_task(ctx, solved_prefix = "✓-", ctfid = ctfid)
+
     @slash.slash(name="solved",
                  description="The challenge was solved",
                  guild_ids=[config.bot.guild],
