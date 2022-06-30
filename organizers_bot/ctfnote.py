@@ -601,7 +601,6 @@ async def assign_player(ctx: discord_slash.SlashContext, playername):
         user_id, password = await ctfnote.createMemberAccount(uid)
         await ctx.send(f"Account {playername} was created with password {password}")
     else:
-        print("Done assigning player.")
         user_id = user[0]['id']
 
     task = await current_ctf.getTaskByName(ctx.channel.name)
@@ -668,6 +667,7 @@ async def import_ctf_from_ctftime(ctx: discord_slash.SlashContext, ctftime_link_
 
     if response.get('importCtf',False) == "Already present":
         await ctx.send(f"That ctf already exists. Check it in the dashboard(<{URL}>).", hidden=hide)
+        return
 
     # TODO: it would be nice to receive the details of the ctf that was just imported. 
     #       Especially the ctfnote CTF id for use as optional argument of the /chal command.
