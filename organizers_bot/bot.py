@@ -89,7 +89,7 @@ def setup():
 
 
     @slash.slash(name="ctfnote_fixup_channel",
-                 description="Use this if you need to set/change the ctf id of the current channel after the channel creation.",
+                 description="Use this if you need to set/change the ctfnote id of the current channel after the channel creation.",
                  guild_ids=[config.bot.guild],
                  options=[
                         create_option(name="ctfid",
