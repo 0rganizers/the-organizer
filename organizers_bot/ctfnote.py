@@ -624,6 +624,9 @@ async def fixup_task(ctx: discord_slash.SlashContext,
     To be run with a context *in that channel*.
     """
     await ctx.defer(hidden=True)
+    if not enabled:
+        await ctx.send("Please enable ctfnote integration first. By specifying valid admin credentials with /ctfnote_update_auth.")
+        return
     prev_pinned_msg = await get_pinned_ctfnote_message(ctx)
     reply_text = "Done."
     if prev_pinned_msg is not None:
