@@ -275,7 +275,7 @@ class CTFNote:
 
     async def getIncomingCtfs(self):
         """
-        Retrieve a list of upcoming CTFs
+        Retrieve a list of upcoming CTFs. Seems to also contain currently ongoing CTFs.
         """
         query = gql.gql(queries.get_incoming_ctfs)
         result = await self.client.execute_async(query)
@@ -305,17 +305,18 @@ class CTFNote:
         imports a CTF with given CTFTime id, checks if the ctf is already
         present and doesn't add it if it is
         """
-        print("[ctfnote]: importCtf")
         for ctf in await self.getCtfs():
-            try:
-                if "ctftimeUrl" in ctf and ctf["ctftimeUrl"]:
+            if "ctftimeUrl" in ctf and ctf["ctftimeUrl"]:
+                if not(ctf["ctftimeUrl"].endswith("/")):
+                    ctf["ctftimeUrl"] += "/"
+                try:
                     present_id = int(ctf["ctftimeUrl"].rsplit("/", 2)[1])
-                    if present_id == id:
-                        return {'importCtf': "Already present"}
-            except ValueError:
-                pass
+                except ValueError:
+                    # parsing as an int failed
+                    pass
+                if present_id == id:
+                    return {'importCtf': "Already present"}
 
-        print("[ctfnote]: _importCtf")
         return await self._importCtf(id)
 
     async def importCtfFromCtftimeLinkOrId(self, link_or_id: str):
@@ -325,7 +326,6 @@ class CTFNote:
 
         raises ValueError if it seems to be neither an integer nor a valid ctftime event link
         """
-        print("[ctfnote]: importCtfFromCtftimeLinkOrId")
         link_or_id = link_or_id.strip()
         # If all characters in the string are digits and it is not empty then we can immediately
         # call importCtf, otherwise need to get the id out of the link string first.
@@ -415,18 +415,14 @@ class CTFNote:
                 return user["id"]
         return 0
 
-    async def getActiveCtf(self):
+    async def getActiveCtfs(self):
         ctfs = await self.getIncomingCtfs()
         now = datetime.now(timezone.utc)
         ctfs = list(filter(lambda ctf: 
             datetime.fromisoformat(ctf["startTime"]) < now and
             datetime.fromisoformat(ctf["endTime"]) > now, ctfs))
 
-        if len(ctfs) > 1: # TODO: select any of the current scheduled ctfs?
-            log.warn("Multiple CTFs active, only taking the first one!")
-            ctfs = ctfs[:1]
-
-        return CTF(self.client, ctfs[0]) if ctfs else None
+        return ctfs
 
     async def subscribe_to_events(self):
         loop = asyncio.get_event_loop()
@@ -498,10 +494,14 @@ async def refresh_ctf(ctx: discord_slash.SlashContext, ctfid: int = None):
     else:
         # if no ctf id is stored in the pinned message, we assume the first in the list of 
         # currently running CTFs is the right one
-        current_ctf = await ctfnote.getActiveCtf()
-        if current_ctf is None:
+        current_ctfs = await ctfnote.getActiveCtfs()
+        if current_ctfs is None:
             await ctx.send("No active ctf! Go on ctfnote and fix the dates!")
-        return current_ctf
+        if len(current_ctfs) > 1:
+            await ctx.send("Multiple CTFs are currently ongoing. I was unable to infer the correct one from optional arguments and pinned messages.")
+            return None
+        # Just one current ctf is happening.
+        return current_ctfs[0]
 
 async def update_login_info(ctx: discord_slash.SlashContext, URL_:str, admin_login_:str, admin_pass_:str):
     global URL, admin_pass, admin_login, enabled
@@ -520,7 +520,6 @@ async def update_login_info(ctx: discord_slash.SlashContext, URL_:str, admin_log
     admin_login = admin_login_
     try:
         await login()
-        current_ctf = await refresh_ctf(ctx)
     #except gql.transport.aiohttp.client_exceptions.InvalidURL as e:
     # I tried to be specific but it only exists once it crashes...
     except Exception as e:
@@ -529,7 +528,9 @@ async def update_login_info(ctx: discord_slash.SlashContext, URL_:str, admin_log
         print(e)
         return
 
-    if current_ctf is not None and ctfnote.token is not None:
+    # Test whether it worked
+    current_ctfs = await ctfnote.getActiveCtfs()
+    if current_ctfs is not None and ctfnote.token is not None:
         enabled = True
         await ctx.send("Success.", hidden=True)
 
@@ -644,7 +645,6 @@ async def import_ctf_from_ctftime(ctx: discord_slash.SlashContext, ctftime_link_
         await ctx.send("CTFNote integration is currently not in use. Ignoring your request. Set up the auth first.", hidden=True)
         return
 
-    print("[ctfnote]: starting import...")
 
     hide = True
     await ctx.defer(hidden=hide)
@@ -658,19 +658,23 @@ async def import_ctf_from_ctftime(ctx: discord_slash.SlashContext, ctftime_link_
         except TransportQueryError:
             await ctx.send("Query failed. Check ctfnote credentials.", hidden=hide)
             return None
-    print("[ctfnote]:import A")
 
     response = None
     try:
         response = await ctfnote.importCtfFromCtftimeLinkOrId(ctftime_link_or_id)
     except ValueError:
         await ctx.send("That link (or ctftime event id) did not work...", hidden=hide)
-        print("[ctfnote]: not B.")
         return None
-    print("[ctfnote]:import B")
-    print(f"{response=}")
 
-    await ctx.send(f"Imported {response['title']} with weight {response['weight']} successfully. It has now id {response['id']}", hidden=hide)
+    if response.get('importCtf',False) == "Already present":
+        await ctx.send(f"That ctf already exists. Check it in the dashboard(<{URL}>).", hidden=hide)
+
+    # TODO: it would be nice to receive the details of the ctf that was just imported. 
+    #       Especially the ctfnote CTF id for use as optional argument of the /chal command.
+    #       But that would require the server to actually return it... or to loop over all (incoming?) ctfs.
+
+    #await ctx.send(f"Imported {response['title']} with weight {response['weight']} successfully. It has now id {response['id']}", hidden=hide)
+    await ctx.send(f"Successfully imported. It should show up in the dashboard(<{URL}>) after a page reload.", hidden=hide)
 
 async def get_pinned_ctfnote_message(ctx: discord_slash.SlashContext):
     """
