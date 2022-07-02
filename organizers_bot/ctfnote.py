@@ -422,6 +422,8 @@ class CTFNote:
             datetime.fromisoformat(ctf["startTime"]) < now and
             datetime.fromisoformat(ctf["endTime"]) > now, ctfs))
 
+        # This is a list. Use an element like this:
+        # return CTF(self.client, ctfs[0]) if ctfs else None
         return ctfs
 
     async def subscribe_to_events(self):
@@ -495,13 +497,14 @@ async def refresh_ctf(ctx: discord_slash.SlashContext, ctfid: int = None):
         # if no ctf id is stored in the pinned message, we assume the first in the list of 
         # currently running CTFs is the right one
         current_ctfs = await ctfnote.getActiveCtfs()
-        if current_ctfs is None:
+        if current_ctfs is None or len(current_ctfs == 0):
             await ctx.send("No active ctf! Go on ctfnote and fix the dates!")
+            return None
         if len(current_ctfs) > 1:
             await ctx.send("Multiple CTFs are currently ongoing. I was unable to infer the correct one from optional arguments and pinned messages.")
             return None
         # Just one current ctf is happening.
-        return current_ctfs[0]
+        return CTF(ctfnote.client, current_ctfs[0])
 
 async def update_login_info(ctx: discord_slash.SlashContext, URL_:str, admin_login_:str, admin_pass_:str):
     global URL, admin_pass, admin_login, enabled
