@@ -117,7 +117,7 @@ def setup():
         if not ctx.channel.name.startswith("✓"):
             await ctx.channel.edit(name=f"✓-{ctx.channel.name}", position=999)
 
-        ctfnote_res = await ctfnote.update_flag(ctx, flag, solved_prefix="✓-")
+        ctfnote_res = await ctfnote.update_flag(ctx, flag)
 
         if flag is not None:
             msg = await ctx.send(f"The flag: `{flag}`")

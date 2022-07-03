@@ -151,12 +151,28 @@ class CTF:
         return next(filter(lambda x: x.id == id, self.tasks))
 
     async def getTaskByName(self, name: str, solved_prefix: str ="✓-"):
+        """
+            Problematic when there are spaces in the task title (but not the channel name).
+            Problematic if two tasks have the same name.
+            Prefer using getTaskByChannelPin where possible.
+        """
         await self._fullupdate() # we always update bc we assume players have been creating new tasks
         # If the task was marked as solved, we need to ignore the prefix
         if name.startswith(solved_prefix):
             name = name[len(solved_prefix):]
 
         return next(filter(lambda x: x.title == name, self.tasks), None)
+
+    async def getTaskByChannelPin(self, ctx: discord_slash.SlashContext):
+        """
+            Get task id from pinned message in current channel,
+            find it in the ctfnote response, return it.
+        """
+        botdb = (await extract_botdb(await get_pinned_ctfnote_message(ctx)))
+        stored_challenge_id = (botdb or dict()).get('chalid', None)
+        await self._fullupdate()
+        return next(filter(lambda x: x.id == stored_challenge_id, self.tasks), None)
+
 
     async def createTask(self, name, category, description="", flag="", solved_prefix: str = "✓-"):
         """
@@ -537,7 +553,7 @@ async def update_login_info(ctx: discord_slash.SlashContext, URL_:str, admin_log
         enabled = True
         await ctx.send("Success.", hidden=True)
 
-async def update_flag(ctx: discord_slash.SlashContext, flag: str, solved_prefix="✓-"):
+async def update_flag(ctx: discord_slash.SlashContext, flag: str):
     """
         Updates the flag on ctfnote. To unset, simply set `flag` to the empty string.
         Handles the case where the channel name was marked as solved as well.
@@ -546,7 +562,7 @@ async def update_flag(ctx: discord_slash.SlashContext, flag: str, solved_prefix=
     if current_ctf is None: return
 
     channel_name = ctx.channel.name
-    update_flag_response = await current_ctf.getTaskByName(channel_name, solved_prefix=solved_prefix)
+    update_flag_response = await current_ctf.getTaskByChannelPin(ctx)
     if update_flag_response is not None:
         update_flag_response = await update_flag_response.updateFlag(flag or "")
     return update_flag_response
@@ -584,6 +600,7 @@ async def add_task(ctx: discord_slash.SlashContext, created, name: str,
         # Note: the pinned message is identified by containing the word "botdb" and "ctfnote url:".
         botdb = json.dumps({
             'ctfid': current_ctf.id,
+            'chalid': result.id,
             })
         bot_data_store = f"\n||botdb:{botdb}||"
         msg = await created.send(ctfnote_url + hackmd_url + bot_data_store)
@@ -606,7 +623,7 @@ async def assign_player(ctx: discord_slash.SlashContext, playername):
     else:
         user_id = user[0]['id']
 
-    task = await current_ctf.getTaskByName(ctx.channel.name)
+    task = await current_ctf.getTaskByChannelPin(ctx)
     if task is None:
         await ctx.send("This challenge does not exist on ctfnote.")
         return
@@ -662,7 +679,7 @@ async def whos_leader_of_this_shit(ctx: discord_slash.SlashContext):
     if current_ctf is None: return
 
 
-    task = await current_ctf.getTaskByName(ctx.channel.name)
+    task = await current_ctf.getTaskByChannelPin(ctx)
     if task is None:
         await ctx.send("This challenge does not exist on ctfnote.", hidden=hide)
         return
