@@ -618,8 +618,13 @@ async def assign_player(ctx: discord_slash.SlashContext, playername):
     uid = playername.name + '#' + playername.discriminator
     user =  list(filter(lambda x: x['login'] == uid, all_users))
     if len(user) == 0:
+        # We can make the response hidden to other players if the sender is the person who is being assigned.
+        sender = ctx.message.author
+        sender_fullname = f"{sender.name}#{sender.discriminator}"
+        hidden = (sender_fullname != uid)
+
         user_id, password = await ctfnote.createMemberAccount(uid)
-        await ctx.send(f"Account {playername} was created with password {password}")
+        await ctx.send(f"Account {playername} was created with password {password}", hidden=hidden)
     else:
         user_id = user[0]['id']
 
@@ -672,7 +677,7 @@ async def whos_leader_of_this_shit(ctx: discord_slash.SlashContext):
         return
 
     hide = True # reply will only be visible to *this* user.
-    await ctx.defer(hidden=hide)
+    await ctx.defer(hidden=hide, thinking=true)
                            # We defer here just in case the refresh ctf could take a while.
                            # might not be needed.
     current_ctf = await refresh_ctf(ctx) 
