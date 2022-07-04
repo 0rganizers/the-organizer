@@ -514,7 +514,7 @@ async def refresh_ctf(ctx: discord_slash.SlashContext, ctfid: int = None):
         # if no ctf id is stored in the pinned message, we assume the first in the list of 
         # currently running CTFs is the right one
         current_ctfs = await ctfnote.getActiveCtfs()
-        if current_ctfs is None or len(current_ctfs == 0):
+        if current_ctfs is None or len(current_ctfs) == 0:
             await ctx.send("No active ctf! Go on ctfnote and fix the dates!")
             return None
         if len(current_ctfs) > 1:
@@ -619,14 +619,14 @@ async def register_themselves(ctx: discord_slash.SlashContext, password: str = N
     if current_ctf is None: return
 
     all_users = await ctfnote.getUsers()
-    sender = ctx.message.author
+    sender = ctx.author
     uid = f"{sender.name}#{sender.discriminator}"
     user =  list(filter(lambda x: x['login'] == uid, all_users))
     if len(user) > 0:
         await ctx.send(f"Account {uid} already exists.", hidden=True)
         return
 
-    user_id, password = await ctfnote.createMemberAccount(uid)
+    user_id, password = await ctfnote.createMemberAccount(uid, password = password)
     await ctx.send(f"Account {uid} was created with password {password}", hidden=True)
     
 
@@ -643,9 +643,9 @@ async def assign_player(ctx: discord_slash.SlashContext, playername):
     user =  list(filter(lambda x: x['login'] == uid, all_users))
     if len(user) == 0:
         # We can make the response hidden to other players if the sender is the person who is being assigned.
-        sender = ctx.message.author
+        sender = ctx.author
         sender_fullname = f"{sender.name}#{sender.discriminator}"
-        hidden = (sender_fullname != uid)
+        hidden = (sender_fullname == uid)
 
         user_id, password = await ctfnote.createMemberAccount(uid)
         await ctx.send(f"Account {playername} was created with password {password}", hidden=hidden)
@@ -701,7 +701,7 @@ async def whos_leader_of_this_shit(ctx: discord_slash.SlashContext):
         return
 
     hide = True # reply will only be visible to *this* user.
-    await ctx.defer(hidden=hide, thinking=true)
+    await ctx.defer(hidden=hide)
                            # We defer here just in case the refresh ctf could take a while.
                            # might not be needed.
     current_ctf = await refresh_ctf(ctx) 

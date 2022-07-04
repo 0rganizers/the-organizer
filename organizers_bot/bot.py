@@ -262,7 +262,7 @@ def setup():
                                    required=False),
                  ])
     @require_role(config.mgmt.player_role)
-    async def ctfnote_register_myself(ctx: discord_slash.SlashContext, password: str):
+    async def ctfnote_register_myself(ctx: discord_slash.SlashContext, password: str = None):
         await ctfnote.register_themselves(ctx, password or None)
 
     @slash.slash(name="ctfnote_who_leads",
