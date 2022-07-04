@@ -11,7 +11,8 @@ websockets_logger.setLevel(logging.WARNING)
 
 from string import ascii_letters, digits
 from random import choice, randrange
-from datetime import datetime, timezone
+from datetime import datetime
+import dateutil # parser, tz
 import logging
 import asyncio
 from . import queries
@@ -434,10 +435,10 @@ class CTFNote:
 
     async def getActiveCtfs(self):
         ctfs = await self.getIncomingCtfs()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(dateutil.tz.UTC)
         ctfs = list(filter(lambda ctf: 
-            datetime.fromisoformat(ctf["startTime"]) < now and
-            datetime.fromisoformat(ctf["endTime"]) > now, ctfs))
+            dateutil.parser.isoparse(ctf["startTime"]) < now and
+            dateutil.parser.isoparse(ctf["endTime"]) > now, ctfs))
 
         # This is a list. Use an element like this:
         # return CTF(self.client, ctfs[0]) if ctfs else None
