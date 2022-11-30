@@ -114,13 +114,37 @@ def setup():
     @require_role(config.mgmt.player_role)
     async def mark_solved(ctx: discord_slash.SlashContext, flag: typing.Optional[str] = None):
         await ctx.defer()
-        if not ctx.channel.name.startswith("✓"):
+        if not (ctx.channel.name.startswith("✓") or ctx.channel.name.startswith("🧀")):
             await ctx.channel.edit(name=f"✓-{ctx.channel.name}", position=999)
 
         ctfnote_res = await ctfnote.update_flag(ctx, flag)
 
         if flag is not None:
             msg = await ctx.send(f"The flag: `{flag}`")
+            await msg.pin()
+        else:
+            await ctx.send("removed flag.")
+
+    @slash.slash(name="cheese",
+                description="The challenge was cheesed",
+                guild_ids=[config.bot.guild],
+                options=[
+                    create_option(name="flag",
+                                description="The flag that was obtained by chessing",
+                                option_type=SlashCommandOptionType.STRING,
+                                required=True)
+                    ]
+                )
+    @require_role(config.mgmt.player_role)
+    async def mark_cheesed(ctx: discord_slash.SlashContext, flag: typing.Optional[str] = None):
+        await ctx.defer()
+        if not (ctx.channel.name.startswith("✓") or ctx.channel.name.startswith("🧀")):
+            await ctx.channel.edit(name=f"🧀-{ctx.channel.name}", position=999)
+
+        ctfnote_res = await ctfnote.update_flag(ctx, flag)
+        print("Reached response from CTFnote")
+        if flag is not None:
+            msg = await ctx.send(f"The cheesed flag: `{flag}`")
             await msg.pin()
         else:
             await ctx.send("removed flag.")
