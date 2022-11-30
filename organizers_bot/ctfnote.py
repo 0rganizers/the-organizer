@@ -151,7 +151,7 @@ class CTF:
             await self._fullupdate()
         return next(filter(lambda x: x.id == id, self.tasks))
 
-    async def getTaskByName(self, name: str, solved_prefix: str ="✓-"):
+    async def getTaskByName(self, name: str, solved_prefix: list[str] = ["✓-", "🧀-"]):
         """
             Problematic when there are spaces in the task title (but not the channel name).
             Problematic if two tasks have the same name.
@@ -159,8 +159,9 @@ class CTF:
         """
         await self._fullupdate() # we always update bc we assume players have been creating new tasks
         # If the task was marked as solved, we need to ignore the prefix
-        if name.startswith(solved_prefix):
-            name = name[len(solved_prefix):]
+        
+        if (prefix := list(filter(name.startswith, solved_prefix))) != []:
+            name = name[len(prefix[0]):]
 
         return next(filter(lambda x: x.title == name, self.tasks), None)
 
@@ -175,12 +176,12 @@ class CTF:
         return next(filter(lambda x: x.id == stored_challenge_id, self.tasks), None)
 
 
-    async def createTask(self, name, category, description="", flag="", solved_prefix: str = "✓-"):
+    async def createTask(self, name, category, description="", flag="", solved_prefix: list[str] = ["✓-", "🧀-"]):
         """
         Create a new task for this CTF
         """
-        if name.startswith(solved_prefix):
-            name = name[len(solved_prefix):]
+        if (prefix := list(filter(name.startswith, solved_prefix))) != []:
+            name = name[len(prefix[0]):]
 
         present_task = list(filter(lambda t: t.title == name and 
                 t.category == category, self.tasks))
@@ -581,7 +582,7 @@ def slugify(name:str):
 
 async def add_task(ctx: discord_slash.SlashContext, created, name: str,
         category: str, flag: str = "", description: str = "", 
-        solved_prefix: str = "✓-", ctfid = None):
+        solved_prefix: list[str] = ["✓-", "🧀-"], ctfid = None):
     """
         Creates a ctfnote task and pins it in the channel.
         Also stores the ctf id of the task in that message.
@@ -667,7 +668,7 @@ async def assign_player(ctx: discord_slash.SlashContext, playername):
 
 async def fixup_task(ctx: discord_slash.SlashContext,
         ctfid: int, flag: str = "", description: str = "", 
-        solved_prefix: str = "✓-"):
+        solved_prefix: list[str] = ["✓-", "🧀-"]):
     """
     Finds, wipes, and recreates the pinned message.
     Useful if the channel was created without a ctf - or with a wrong ctf id.
@@ -686,7 +687,8 @@ async def fixup_task(ctx: discord_slash.SlashContext,
         reply_text += " Any previously used ctfnote md for this channel needs to be manually pasted over. It was not removed automatically."
 
     # Add task, with the correct ctfid
-    task_name = ctx.channel.name[len(solved_prefix):] if ctx.channel.name.startswith(solved_prefix) else ctx.channel.name
+    # Assumes all prefixes consist of two characters
+    task_name = ctx.channel.name[len(solved_prefix[0]):] if ctx.channel.name.startswith(tuple(solved_prefix)) else ctx.channel.name
     task_category = ctx.channel.category.name
     await add_task(ctx, created = ctx.channel, name = task_name, category = task_category,
             description = description, solved_prefix = solved_prefix, ctfid = ctfid)

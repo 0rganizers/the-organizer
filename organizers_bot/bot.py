@@ -85,7 +85,7 @@ def setup():
         cat = discord.utils.find(lambda c: c.name == category, ctx.guild.categories)
         created = await ctx.guild.create_text_channel(challenge, position=0, category=cat)
         await ctx.send(f"The channel for <#{created.id}> ({category}) was created")
-        await ctfnote.add_task(ctx, created, challenge, category, solved_prefix = "✓-", ctfid = ctfid)
+        await ctfnote.add_task(ctx, created, challenge, category, solved_prefix = ["✓-", "🧀"], ctfid = ctfid)
 
 
     @slash.slash(name="ctfnote_fixup_channel",
@@ -99,7 +99,7 @@ def setup():
                      ])
     @require_role(config.mgmt.player_role)
     async def ctfnote_fixup_channel(ctx: discord_slash.SlashContext, ctfid = None):
-        await ctfnote.fixup_task(ctx, solved_prefix = "✓-", ctfid = ctfid)
+        await ctfnote.fixup_task(ctx, solved_prefix = ["✓-", "🧀"], ctfid = ctfid)
 
     @slash.slash(name="solved",
                  description="The challenge was solved",
@@ -142,7 +142,7 @@ def setup():
             await ctx.channel.edit(name=f"🧀-{ctx.channel.name}", position=999)
 
         ctfnote_res = await ctfnote.update_flag(ctx, flag)
-        print("Reached response from CTFnote")
+
         if flag is not None:
             msg = await ctx.send(f"The cheesed flag: `{flag}`")
             await msg.pin()
