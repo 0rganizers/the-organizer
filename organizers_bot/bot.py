@@ -1,6 +1,7 @@
 from . import config
 from . import transcript
 from . import ctfnote
+from .raffle import Raffle
 
 import asyncio
 import functools
@@ -43,6 +44,7 @@ def setup():
     slash = discord_slash.SlashCommand(bot, sync_commands=True)
     log = logging.getLogger("bot")
     trans_mgr = transcript.TranscriptManager(bot)
+    current_raffle: typing.Optional[Raffle] = None
 
     @bot.event
     async def on_ready():
@@ -80,7 +82,7 @@ def setup():
                                       required=False)
                      ])
     @require_role(config.mgmt.player_role)
-    async def create_challenge_channel(ctx: discord_slash.SlashContext, 
+    async def create_challenge_channel(ctx: discord_slash.SlashContext,
             category: str, challenge: str, ctfid = None):
         cat = discord.utils.find(lambda c: c.name == category, ctx.guild.categories)
         created = await ctx.guild.create_text_channel(challenge, position=0, category=cat)
@@ -284,6 +286,49 @@ def setup():
     @require_role(config.mgmt.player_role)
     async def ctfnote_import_from_ctftime(ctx: discord_slash.SlashContext, link: str):
         await ctfnote.import_ctf_from_ctftime(ctx, link)
+
+    @slash.slash(name="raffle",
+                 description="Simple dumb raffle a prize",
+                 guild_ids=[config.bot.guild],
+                 options=[
+                     create_option(name="prize",
+                                   description="What prize to raffle",
+                                   option_type=SlashCommandOptionType.STRING,
+                                   required=True),
+                     ])
+    @require_role(config.mgmt.admin_role)
+    async def raffle(ctx: discord_slash.SlashContext, prize: str):
+        nonlocal current_raffle
+        current_raffle = raffle.Raffle(prize, set())
+        await ctx.send(f"Raffling {prize}! use /enter_raffle to enter.")
+
+    @slash.slash(name="enter_raffle",
+                 description="Enter a simple dumb raffle",
+                 guild_ids=[config.bot.guild],
+                 options=[
+                     ])
+    @require_role(config.mgmt.player_role)
+    async def enter_raffle(ctx: discord_slash.SlashContext):
+        nonlocal current_raffle
+        if current_raffle is None:
+            await ctx.send("no such raffle")
+            return
+        current_raffle.add_participant(ctx.author_id)
+
+    @slash.slash(name="end_raffle",
+                 description="Simple dumb end the raffle and draw a winner",
+                 guild_ids=[config.bot.guild],
+                 options=[
+                     ])
+    @require_role(config.mgmt.admin_role)
+    async def raffle(ctx: discord_slash.SlashContext):
+        nonlocal current_raffle
+        if current_raffle is None:
+            await ctx.send("no such raffle")
+            return
+        winner = current_raffle.draw()
+        await ctx.send(f"<@{winner}> gets {current_raffle.prize}!")
+        current_raffle = None
 
     ## Keep this last :)
     return bot
