@@ -616,8 +616,12 @@ async def register_themselves(ctx: discord_slash.SlashContext, password: str = N
         await ctx.send("CTFNote integration is currently not in use. Ignoring your request.", hidden=True)
         return
 
-    current_ctf = await refresh_ctf(ctx) 
-    if current_ctf is None: return
+    try:
+        await login()
+    except Exception as e:
+        await ctx.send("Connection failed.", hidden=True)
+        print(e)
+        return
 
     all_users = await ctfnote.getUsers()
     sender = ctx.author
