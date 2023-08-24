@@ -21,7 +21,12 @@
         "keyID": "key_id"
     },
     "archive": {
-        "url": "https://example.com/",
+        "url": "https://archive.example.com/",
         "secret": "hex-encoded secret"
+    },
+    "ctfnote": {
+      "url": "https://ctfnote.example.com/",
+      "admin_login": "admin_login",
+      "admin_pass": "admin_pass"
     }
 }

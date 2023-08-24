@@ -216,29 +216,6 @@ def setup():
         await category.delete(reason=f"Nuked by {ctx.author.name}")
         await ctx.send(f"Category {category.name} was nuked on request of {ctx.author.name}", hidden=False)
 
-
-
-    @slash.slash(name="ctfnote_update_auth",
-                 description="Update url and auth login info for the ctfnote integration",
-                 guild_ids=[config.bot.guild],
-                 options=[
-                     create_option(name="url",
-                                   description="The url ctfnote is hosted at",
-                                   option_type=SlashCommandOptionType.STRING,
-                                   required=True),
-                     create_option(name="adminlogin",
-                                   description="Admin login password",
-                                   option_type=SlashCommandOptionType.STRING,
-                                   required=True),
-                     create_option(name="adminpass",
-                                   description="Admin login password",
-                                   option_type=SlashCommandOptionType.STRING,
-                                   required=True)
-                     ])
-    @require_role(config.mgmt.player_role)
-    async def ctfnote_update_auth(ctx: discord_slash.SlashContext, url:str, adminlogin:str, adminpass:str):
-        await ctfnote.update_login_info(ctx, url, adminlogin, adminpass)
-
     @slash.slash(name="ctfnote_assign_lead",
                  description="Assign given player as challenge lead for this channel",
                  guild_ids=[config.bot.guild],
