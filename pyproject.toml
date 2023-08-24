@@ -15,12 +15,12 @@ aiobotocore = "^1.3.3"
 gql = "^3.3.0"
 websockets = "^10.3"
 
-[tool.poetry.dev-dependencies]
-mypy = "^0.812"
-
 [tool.poetry.scripts]
 organizers-bot = 'organizers_bot.main:main'
 
+
+[tool.poetry.group.dev.dependencies]
+mypy = "^1.5.1"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
