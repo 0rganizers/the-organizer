@@ -87,6 +87,13 @@ def setup():
         await ctx.send(f"The channel for <#{created.id}> ({category}) was created")
         await ctfnote.add_task(ctx, created, challenge, category, solved_prefix = "✓-", ctfid = ctfid)
 
+    @slash.slash(name="restart",
+                 description="Restarts the bot",
+                 guild_ids=[config.bot.guild])
+    @require_role(config.mgmt.player_role)
+    async def restart_bot(ctx: discord_slash.SlashContext):
+       await ctx.send("Restarting...")
+       exit(1)
 
     @slash.slash(name="ctfnote_fixup_channel",
                  description="Use this if you need to set/change the ctfnote id of the current channel after the channel creation.",
