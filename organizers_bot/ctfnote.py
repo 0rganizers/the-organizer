@@ -50,7 +50,7 @@ class Task:
             "description": self.desc,
             "flag": self.flag,
         })
-        await self.parent._fullupdate()
+        await self.parent._fullupdate()000f3c91
 
     async def updateTitle(self, newtitle: str):
         """
@@ -579,7 +579,7 @@ def slugify(name:str):
         npm package called slugify. We just do a best-effort approach here. If link generation fails
         in the bot, players should just use the web interface.
     """
-    name = name.replace(" ", "-")
+    name = name.replace(" ", "-").replace("/", "")
     return name
 
 async def add_task(ctx: discord_slash.SlashContext, created, name: str,
