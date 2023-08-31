@@ -50,7 +50,7 @@ class Task:
             "description": self.desc,
             "flag": self.flag,
         })
-        await self.parent._fullupdate()000f3c91
+        await self.parent._fullupdate()
 
     async def updateTitle(self, newtitle: str):
         """
