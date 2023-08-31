@@ -560,6 +560,9 @@ async def update_flag(ctx: discord_slash.SlashContext, flag: str):
         Updates the flag on ctfnote. To unset, simply set `flag` to the empty string.
         Handles the case where the channel name was marked as solved as well.
     """
+    if not enabled:
+        return
+
     current_ctf = await refresh_ctf(ctx) 
     if current_ctf is None: return
 
