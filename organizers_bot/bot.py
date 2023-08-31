@@ -285,6 +285,21 @@ def setup():
     async def ctfnote_import_from_ctftime(ctx: discord_slash.SlashContext, link: str):
         await ctfnote.import_ctf_from_ctftime(ctx, link)
 
+    @slash.slash(name="stats",
+                 description="Display some useful stats about the server, such as number of channels",
+                 guild_ids=[config.bot.guild])
+    async def stats(ctx: discord_slash.SlashContext):
+        log.info("Running Stats command")
+        num_channels = len(ctx.guild.channels)
+        num_cats = 0
+        for chan in ctx.guild.channels:
+            log.debug("Channel: %s", chan.name)
+            chan: discord.abc.GuildChannel
+            if isinstance(chan, discord.CategoryChannel):
+                num_cats += 1
+        
+        await ctx.send(f"Channels: {num_channels}/500, {500 - num_channels} left\nCategories: {num_cats}")
+
     ## Keep this last :)
     return bot
 
