@@ -92,8 +92,6 @@ def setup():
                 guild_ids=[config.bot.guild])
     @require_role(config.mgmt.player_role)
     async def opt_out(ctx: discord_slash.SlashContext):
-        await ctx.defer()
-
         member = ctx.author
         guild = ctx.guild
 
@@ -108,14 +106,10 @@ def setup():
             await ctx.send("You are already opted out.", hidden=True)
             return
 
-        try:
-            await member.add_roles(optout_role, reason=f"User opted out via /optout command")
-            if player_role in member.roles:
-                await member.remove_roles(player_role, reason=f"User opted out via /optout command")
+        await member.add_roles(optout_role, reason=f"User opted out via /optout command")
+        await member.remove_roles(player_role, reason=f"User opted out via /optout command")
 
-            await ctx.send(f"You have successfully opted out.")
-        except:
-            await ctx.send("Error: I don't have permissions? to manage roles. Please contact an admin.", hidden=True)
+        await ctx.send(f"You have successfully opted out.")
 
 
     @slash.slash(name="optin",
@@ -123,8 +117,6 @@ def setup():
                 guild_ids=[config.bot.guild])
     @require_role(config.mgmt.optout_player_role)
     async def opt_in(ctx: discord_slash.SlashContext):
-        await ctx.defer() # Acknowledge interaction
-
         member = ctx.author
         guild = ctx.guild
 
@@ -135,21 +127,12 @@ def setup():
             await ctx.send("Error: roles are not configured correctly. Please contact an admin.", hidden=True)
             return
 
-        if optout_role not in member.roles:
-            await ctx.send("You are already opted in.", hidden=True)
-            return
+        if player_role not in member.roles:
+            await member.add_roles(player_role, reason=f"User opted in via /optout command")
 
-        try:
-            if player_role not in member.roles:
-                await member.add_roles(player_role, reason=f"User opted in via /optout command")
-            if optout_role in member.roles:
-                await member.remove_roles(optout_role, reason=f"User opted in via /optout command")
+        await member.remove_roles(optout_role, reason=f"User opted in via /optout command")
 
-            await ctx.send(f"Welcome back!")
-
-        except:
-            await ctx.send("Error: I don't have permission? to manage roles. Please contact an admin.", hidden=True)
-
+        await ctx.send(f"Welcome back!")
 
     @slash.slash(name="ctfnote_fixup_channel",
                  description="Use this if you need to set/change the ctfnote id of the current channel after the channel creation.",
