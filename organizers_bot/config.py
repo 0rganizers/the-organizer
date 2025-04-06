@@ -13,6 +13,7 @@ class BotConfig:
 class ManagementConfig:
     categories: list[str]
     player_role: int
+    optout_player_role: int
     admin_role: int
     transcript_channel: int
     loading_emoji: str
@@ -41,6 +42,7 @@ def load(filename: pathlib.Path):
         mgmt = ManagementConfig(
                 conf['mgmt']['categories'],
                 conf['mgmt']['player_role'],
+                conf['mgmt']['optout_player_role'],
                 conf['mgmt']['admin_role'],
                 conf['mgmt']['transcript_channel'],
                 conf['mgmt']['loading_emoji']
