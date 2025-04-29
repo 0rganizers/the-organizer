@@ -83,6 +83,8 @@ def setup():
     async def create_challenge_channel(ctx: discord_slash.SlashContext, 
             category: str, challenge: str, ctfid = None):
         cat = discord.utils.find(lambda c: c.name == category, ctx.guild.categories)
+        if cat is None:
+            cat = await ctx.guild.create_category(category)
         created = await ctx.guild.create_text_channel(challenge, position=0, category=cat)
         await ctx.send(f"The channel for <#{created.id}> ({category}) was created")
         await ctfnote.add_task(ctx, created, challenge, category, solved_prefix = "✓-", ctfid = ctfid)
