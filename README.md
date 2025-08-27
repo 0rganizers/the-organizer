@@ -15,7 +15,6 @@ Some planned/wanted features include
 - [ ] Manage a calendar of upcoming contests to see who is interested in a particular CTF, and how much tryharding there will or should be
 - [ ] Team- and individual-based opt-in and opt-out
 - [ ] ctfnote integration
-    - [x] specify server settings with `/ctfnote_update_auth`  (can be done by player)
     - [x] create a ctfnote pad for a `/chal` (can be done by player)
         - [x] Takes an optional argument for concurrent ctfs.
     - [x] pin ctfnote link to the channel
@@ -74,8 +73,6 @@ Currently in development by:
   docker build -t orgzbot .
   docker run --rm -it orgzbot:latest
   ```
-
-* in the discord server, specify the ctfnote credentials with the `/ctfnote_update_auth` command. If you don't want to use it, set it to something invalid i guess...
 
 ## CTFNote Integration
 

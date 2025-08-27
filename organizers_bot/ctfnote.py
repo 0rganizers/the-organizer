@@ -15,6 +15,7 @@ import dateutil # parser, tz
 import logging
 import asyncio
 from . import queries
+from . import config
 import discord
 import discord_slash                                                            # type: ignore
 import json
@@ -464,18 +465,13 @@ class CTFNote:
         loop.create_task(start_listening(queries.subscribe_to_task, "task_event"))
 
 
-# These credentials can be changed with a bot command
-# URL _must_ end with a slash
-URL = "https://cyanpencil.xyz/note/"
-admin_login = "a"
-admin_pass = "b"
 ctfnote: CTFNote = CTFNote("")
-enabled: bool = False
+enabled: bool = True
 
 async def login():
     global ctfnote
-    ctfnote = CTFNote(URL + "graphql")
-    await ctfnote.login(admin_login, admin_pass)
+    ctfnote = CTFNote(config.ctfnote.url + "graphql")
+    await ctfnote.login(config.ctfnote.admin_login, config.ctfnote.admin_pass)
 
 async def refresh_ctf(ctx: discord_slash.SlashContext, ctfid: int = None):
     """
@@ -523,37 +519,6 @@ async def refresh_ctf(ctx: discord_slash.SlashContext, ctfid: int = None):
         # Just one current ctf is happening.
         return CTF(ctfnote.client, current_ctfs[0])
 
-async def update_login_info(ctx: discord_slash.SlashContext, URL_:str, admin_login_:str, admin_pass_:str):
-    global URL, admin_pass, admin_login, enabled
-    URL = URL_
-    
-    # option to completely disable ctfnote interactions until login infos are updated again.
-    if 'disable' == URL.lower() or 'disabled' == URL.lower() or '' == URL.lower():
-        enabled = False
-        await ctx.send("Disabled CTFNote integration.", hidden=False)
-        return
-    await ctx.defer(hidden=True)
-
-    if not URL.endswith('/'):
-        URL = f"{URL}/"
-    admin_pass = admin_pass_
-    admin_login = admin_login_
-    try:
-        await login()
-    #except gql.transport.aiohttp.client_exceptions.InvalidURL as e:
-    # I tried to be specific but it only exists once it crashes...
-    except Exception as e:
-        await ctx.send("No ctfnote for you. Can't reach the site or something.", hidden=True)
-        enabled = False
-        print(e)
-        return
-
-    # Test whether it worked
-    current_ctfs = await ctfnote.getActiveCtfs()
-    if current_ctfs is not None and ctfnote.token is not None:
-        enabled = True
-        await ctx.send("Success.", hidden=True)
-
 async def update_flag(ctx: discord_slash.SlashContext, flag: str):
     """
         Updates the flag on ctfnote. To unset, simply set `flag` to the empty string.
@@ -598,8 +563,8 @@ async def add_task(ctx: discord_slash.SlashContext, created, name: str,
     if ctx is not None:
         # discord trick: <URL> does not show link previews, while URL does
         ctfnote_url = "\nctfnote url: " + \
-            f"<{URL}#/ctf/{current_ctf.id}-{slugify(current_ctf.name)}/task/{result.id}-{slugify(result.title)}>"
-        hackmd_url = "\nhackmd (in case the other is broken): " + f"<{URL}{result.url}>"
+            f"<{config.ctfnote.url}#/ctf/{current_ctf.id}-{slugify(current_ctf.name)}/task/{result.id}-{slugify(result.title)}>"
+        hackmd_url = "\nhackmd (in case the other is broken): " + f"<{config.ctfnote.url}{result.url}>"
         # we need to save the ctf id somewhere to distinguish between concurrent ctfs.
         # Note: the pinned message is identified by containing the word "botdb" and "ctfnote url:".
         botdb = json.dumps({
@@ -681,7 +646,7 @@ async def fixup_task(ctx: discord_slash.SlashContext,
     """
     await ctx.defer(hidden=True)
     if not enabled:
-        await ctx.send("Please enable ctfnote integration first. By specifying valid admin credentials with /ctfnote_update_auth.")
+        await ctx.send("Please enable ctfnote integration first.")
         return
     prev_pinned_msg = await get_pinned_ctfnote_message(ctx)
     reply_text = "Done."
@@ -754,7 +719,7 @@ async def import_ctf_from_ctftime(ctx: discord_slash.SlashContext, ctftime_link_
         return None
 
     if response.get('importCtf',False) == "Already present":
-        await ctx.send(f"That ctf already exists. Check it in the dashboard(<{URL}>).", hidden=hide)
+        await ctx.send(f"That ctf already exists. Check it in the dashboard(<{config.ctfnote.url}>).", hidden=hide)
         return
 
     # TODO: it would be nice to receive the details of the ctf that was just imported. 
@@ -762,7 +727,7 @@ async def import_ctf_from_ctftime(ctx: discord_slash.SlashContext, ctftime_link_
     #       But that would require the server to actually return it... or to loop over all (incoming?) ctfs.
 
     #await ctx.send(f"Imported {response['title']} with weight {response['weight']} successfully. It has now id {response['id']}", hidden=hide)
-    await ctx.send(f"Successfully imported. It should show up in the dashboard(<{URL}>) after a page reload.", hidden=hide)
+    await ctx.send(f"Successfully imported. It should show up in the dashboard(<{config.ctfnote.url}>) after a page reload.", hidden=hide)
 
 async def get_pinned_ctfnote_message(ctx: discord_slash.SlashContext):
     """
