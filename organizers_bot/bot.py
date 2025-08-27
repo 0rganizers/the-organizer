@@ -5,17 +5,14 @@ from . import ctfnote
 import asyncio
 import functools
 import hashlib
-import io
 import logging
 import typing
-import os
 
 import discord                                                                  # type: ignore
 import discord_slash                                                            # type: ignore
-from discord_slash.utils.manage_commands import create_option, create_choice    # type: ignore
+from discord_slash.utils.manage_commands import create_option                   # type: ignore
 from discord_slash.model import SlashCommandOptionType                          # type: ignore
 
-import traceback
 
 
 def require_role(minreq=None):
@@ -106,10 +103,10 @@ def setup():
             await ctx.send("You are already opted out.", hidden=True)
             return
 
-        await member.add_roles(optout_role, reason=f"User opted out via /optout command")
-        await member.remove_roles(player_role, reason=f"User opted out via /optout command")
+        await member.add_roles(optout_role, reason="User opted out via /optout command")
+        await member.remove_roles(player_role, reason="User opted out via /optout command")
 
-        await ctx.send(f"You have successfully opted out.")
+        await ctx.send("You have successfully opted out.")
 
 
     @slash.slash(name="optin",
@@ -128,11 +125,11 @@ def setup():
             return
 
         if player_role not in member.roles:
-            await member.add_roles(player_role, reason=f"User opted in via /optout command")
+            await member.add_roles(player_role, reason="User opted in via /optout command")
 
-        await member.remove_roles(optout_role, reason=f"User opted in via /optout command")
+        await member.remove_roles(optout_role, reason="User opted in via /optout command")
 
-        await ctx.send(f"Welcome back!")
+        await ctx.send("Welcome back!")
 
     @slash.slash(name="ctfnote_fixup_channel",
                  description="Use this if you need to set/change the ctfnote id of the current channel after the channel creation.",
