@@ -9,8 +9,7 @@ aio_logger.setLevel(logging.WARNING)
 from gql.transport.websockets import log as websockets_logger
 websockets_logger.setLevel(logging.WARNING)
 
-from string import ascii_letters, digits
-from random import choice, randrange
+from random import randrange
 from datetime import datetime
 import dateutil # parser, tz
 import logging

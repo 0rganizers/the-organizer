@@ -13,9 +13,7 @@ import copy
 import json
 import aiobotocore
 import aiobotocore.client
-import hashlib
 import hmac
-import json
 import urllib
 
 log = logging.getLogger("transcript")
